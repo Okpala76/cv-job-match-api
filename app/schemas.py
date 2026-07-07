@@ -5,6 +5,13 @@ class AnalyzeMatchRequest(BaseModel):
     job_description: str = Field(min_length=1)
 
 
+class AIAnalysisResult(BaseModel):
+    match_percentage: int
+    matched_skills: list[str]
+    missing_skills: list[str]
+    tailoring_advice: str
+
+
 class AnalyzeMatchResponse(BaseModel):
     match_percentage: int
     match_level: str
