@@ -10,6 +10,13 @@ load_dotenv()
 
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
+MODEL_CANDIDATES = [
+    "gemini-3.1-flash-lite",
+    "gemini-2.5-flash-lite",
+    "gemini-2.5-flash",
+    "gemini-3.5-flash",
+]
+
 
 def analyze_cv_match(job_description: str) -> AIAnalysisResult:
     prompt = f"""
@@ -38,14 +45,24 @@ Job Description:
 {job_description}
 """
 
-    interaction = client.interactions.create(
-        model="gemini-3.5-flash",
-        input=prompt,
-        response_format={
-            "type": "text",
-            "mime_type": "application/json",
-            "schema": AIAnalysisResult.model_json_schema(),
-        },
-    )
+    last_error = None
 
-    return AIAnalysisResult.model_validate_json(interaction.output_text)
+    for model in MODEL_CANDIDATES:
+        try:
+            interaction = client.interactions.create(
+                model=model,
+                input=prompt,
+                response_format={
+                    "type": "text",
+                    "mime_type": "application/json",
+                    "schema": AIAnalysisResult.model_json_schema(),
+                },
+            )
+
+            return AIAnalysisResult.model_validate_json(interaction.output_text)
+
+        except Exception as error:
+            last_error = error
+            continue
+
+    raise Exception(f"All Gemini models failed. Last error: {last_error}")
