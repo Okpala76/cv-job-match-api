@@ -6,8 +6,9 @@ GITHUB: https://www.github.com/Okpala76      	LOCATION: LAGOS
 
 CAREER OBJECTIVE
 
- I am a passionate and results-driven Software Developer with an engineering foundation. I have under 2 years of experience in JavaScript, Python, and full-stack development
-Key Projects:
+I am a passionate and results-driven Software Developer with an engineering foundation. I have under 3 years of experience in JavaScript, Python, and full-stack development
+
+ Key Projects:
 Propi: A platform connecting individuals with real estate professionals.
 NSO (No Seed Oil): An app to help users find healthier oil products.
 MaMeds: A medication reminder app.
@@ -26,7 +27,7 @@ WAECE (West African Examination Council Examination) For Certificate Click Here
 
 WORK EXPERIENCE
 EkoHacks Studios
-Engineer & Developer | 2024 AUGUST– 2026 MARCH 
+Engineer & Developer | 2024 AUGUST to 2026 MARCH 
 Led the Nigerian junior developers on the team carry out day to dat tasks
 Propi: Full-stack development with Next.js (frontend) and FastAPI (backend).
 Led the integration of Supabase for database management and Railway for deployment automation.
