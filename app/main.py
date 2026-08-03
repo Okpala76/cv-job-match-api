@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI, HTTPException
 
 from app.ai_client import analyze_cv_match, screen_job_quality
@@ -10,8 +12,28 @@ from app.rules import (
     calculate_screening_decision,
     find_hard_rejection_reason,
 )
+from app.ai_client import analyze_cv_match, screen_job_quality
+from app.schemas import (
+    AnalyzeMatchRequest,
+    AnalyzeMatchResponse,
+)
+from app.rules import (
+    calculate_match_result,
+    calculate_screening_decision,
+    find_hard_rejection_reason,
+)
 
-app = FastAPI()
+app = FastAPI(title="CV Job Match API")
+
+# APP_API_KEY = os.getenv("APP_API_KEY")
+
+
+# def verify_api_key(x_api_key: str | None):
+#     if not APP_API_KEY:
+#         raise HTTPException(status_code=500, detail="Server API key is not configured")
+
+#     if x_api_key != APP_API_KEY:
+#         raise HTTPException(status_code=401, detail="Invalid or missing API key")
 
 
 @app.get("/health")
