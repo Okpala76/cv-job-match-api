@@ -415,37 +415,49 @@ function duplicateEnsureOutputColumns_(sheet) {
     outputHeaders.duplicateReason,
   ];
 
-  let columnMap = duplicateBuildColumnMap_(sheet);
-  let nextColumn = sheet.getLastColumn() + 1;
+  const columnMap = duplicateBuildColumnMap_(sheet);
 
-  requiredHeaders.forEach(function (header) {
+  const missingHeaders = requiredHeaders.filter(function (header) {
     const normalizedHeader = duplicateNormalizeHeader_(header);
 
-    if (Object.prototype.hasOwnProperty.call(columnMap, normalizedHeader)) {
-      return;
-    }
-
-    /*
-     * Copy the preceding header's formatting so the
-     * new columns match the current tracker.
-     */
-    if (nextColumn > 1) {
-      sheet
-        .getRange(DUPLICATE_CHECK_CONFIG.headerRow, nextColumn - 1)
-        .copyTo(
-          sheet.getRange(DUPLICATE_CHECK_CONFIG.headerRow, nextColumn),
-          SpreadsheetApp.CopyPasteType.PASTE_FORMAT,
-          false,
-        );
-    }
-
-    sheet
-      .getRange(DUPLICATE_CHECK_CONFIG.headerRow, nextColumn)
-      .setValue(header);
-
-    nextColumn += 1;
-    columnMap = duplicateBuildColumnMap_(sheet);
+    return !Object.prototype.hasOwnProperty.call(columnMap, normalizedHeader);
   });
+
+  if (missingHeaders.length === 0) {
+    return;
+  }
+
+  const lastUsedColumn = sheet.getLastColumn();
+
+  const requiredLastColumn = lastUsedColumn + missingHeaders.length;
+
+  const currentMaximumColumns = sheet.getMaxColumns();
+
+  /*
+   * Add physical columns before requesting ranges
+   * that extend beyond the current sheet dimensions.
+   */
+  if (requiredLastColumn > currentMaximumColumns) {
+    sheet.insertColumnsAfter(
+      currentMaximumColumns,
+      requiredLastColumn - currentMaximumColumns,
+    );
+  }
+
+  const newHeaderRange = sheet.getRange(
+    DUPLICATE_CHECK_CONFIG.headerRow,
+    lastUsedColumn + 1,
+    1,
+    missingHeaders.length,
+  );
+
+  if (lastUsedColumn >= 1) {
+    sheet
+      .getRange(DUPLICATE_CHECK_CONFIG.headerRow, lastUsedColumn)
+      .copyTo(newHeaderRange, SpreadsheetApp.CopyPasteType.PASTE_FORMAT, false);
+  }
+
+  newHeaderRange.setValues([missingHeaders]);
 }
 
 /**
