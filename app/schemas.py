@@ -36,6 +36,37 @@ class OpportunityGateResult(BaseModel):
     monthly_salary_ngn: int | None = Field(default=None, ge=0)
 
 
+class RoleCeilingResult(BaseModel):
+    role_ceiling_decision: Literal[
+        "Accepted",
+        "Rejected",
+        "Manual review",
+    ]
+
+    detected_role_level: Literal[
+        "Internship",
+        "Graduate",
+        "Entry-level",
+        "Junior",
+        "Mid-level",
+        "Senior",
+        "Leadership",
+        "Unspecified",
+    ]
+
+    role_ceiling_reasons: list[str] = Field(min_length=1)
+
+    minimum_required_experience_years: int | None = Field(
+        default=None,
+        ge=0,
+    )
+
+    maximum_required_experience_years: int | None = Field(
+        default=None,
+        ge=0,
+    )
+
+
 class AIAnalysisResult(BaseModel):
     match_percentage: int = Field(ge=0, le=100)
     matched_skills: list[str] = Field(default_factory=list)
@@ -54,6 +85,40 @@ class AnalyzeMatchResponse(BaseModel):
     matched_company_name: str | None = None
     company_tier: Literal["A", "B"] | None = None
     monthly_salary_ngn: int | None = Field(default=None, ge=0)
+    role_ceiling_decision: (
+        Literal[
+            "Accepted",
+            "Rejected",
+            "Manual review",
+        ]
+        | None
+    ) = None
+
+    detected_role_level: (
+        Literal[
+            "Internship",
+            "Graduate",
+            "Entry-level",
+            "Junior",
+            "Mid-level",
+            "Senior",
+            "Leadership",
+            "Unspecified",
+        ]
+        | None
+    ) = None
+
+    role_ceiling_reasons: list[str] = Field(default_factory=list)
+
+    minimum_required_experience_years: int | None = Field(
+        default=None,
+        ge=0,
+    )
+
+    maximum_required_experience_years: int | None = Field(
+        default=None,
+        ge=0,
+    )
 
     match_percentage: int | None = Field(default=None, ge=0, le=100)
     match_level: Literal["Strong", "Medium", "Weak"] | None = None
