@@ -1,0 +1,119 @@
+canonical_name,aliases,country,industry,company_tier,approved,approval_basis,source_url,last_verified,review_status
+Access Bank Plc,Access Bank|Access Bank Nigeria|Access Holdings,Nigeria,Financial Services,A,true,Major regulated bank with national scale,https://www.accessbankplc.com/,2026-08-05,seed_for_owner_review
+First Bank of Nigeria Limited,FirstBank|First Bank|FBN,Nigeria,Financial Services,A,true,Major regulated bank with national scale,https://www.firstbanknigeria.com/,2026-08-05,seed_for_owner_review
+United Bank for Africa Plc,UBA|UBA Group|United Bank for Africa,Nigeria,Financial Services,A,true,Major pan-African bank with Nigerian headquarters,https://www.ubagroup.com/,2026-08-05,seed_for_owner_review
+Zenith Bank Plc,Zenith|Zenith Bank Nigeria,Nigeria,Financial Services,A,true,Major regulated bank with national scale,https://www.zenithbank.com/,2026-08-05,seed_for_owner_review
+Guaranty Trust Holding Company Plc,GTCO|GTBank|Guaranty Trust Bank|GTB,Nigeria,Financial Services,A,true,Major regulated financial group and bank,https://www.gtco.com/,2026-08-05,seed_for_owner_review
+Stanbic IBTC Holdings Plc,Stanbic IBTC|Stanbic IBTC Bank,Nigeria,Financial Services,A,true,Major regulated financial group,https://www.stanbicibtc.com/,2026-08-05,seed_for_owner_review
+Ecobank Nigeria Limited,Ecobank Nigeria|Ecobank,Nigeria,Financial Services,A,true,Major pan-African bank with substantial Nigerian operations,https://www.ecobank.com/ng/personal-banking,2026-08-05,seed_for_owner_review
+Fidelity Bank Plc,Fidelity Bank|Fidelity Nigeria,Nigeria,Financial Services,B,true,Large regulated Nigerian bank,https://www.fidelitybank.ng/,2026-08-05,seed_for_owner_review
+First City Monument Bank Limited,FCMB|FCMB Group|First City Monument Bank,Nigeria,Financial Services,B,true,Large regulated Nigerian bank and financial group,https://www.fcmb.com/,2026-08-05,seed_for_owner_review
+Sterling Bank Limited,Sterling Bank|Sterling,Nigeria,Financial Services,B,true,Established regulated Nigerian bank,https://sterling.ng/,2026-08-05,seed_for_owner_review
+Wema Bank Plc,Wema|Wema Bank|ALAT,Nigeria,Financial Services,B,true,Established regulated Nigerian bank with strong digital operations,https://www.wemabank.com/,2026-08-05,seed_for_owner_review
+Standard Chartered Bank Nigeria Limited,Standard Chartered Nigeria|Standard Chartered,Nigeria,Financial Services,A,true,Major international bank operating in Nigeria,https://www.sc.com/ng/,2026-08-05,seed_for_owner_review
+Citibank Nigeria Limited,Citi Nigeria|Citibank Nigeria|Citi,Nigeria,Financial Services,A,true,Major international bank operating in Nigeria,https://www.citigroup.com/global/about-us/global-presence/nigeria,2026-08-05,seed_for_owner_review
+Union Bank of Nigeria Plc,Union Bank Nigeria|Union Bank,Nigeria,Financial Services,B,true,Long-established regulated Nigerian bank,https://www.unionbankng.com/,2026-08-05,seed_for_owner_review
+Polaris Bank Limited,Polaris Bank|Polaris,Nigeria,Financial Services,B,true,Large regulated Nigerian bank,https://www.polarisbanklimited.com/,2026-08-05,seed_for_owner_review
+ProvidusBank Limited,Providus Bank|ProvidusBank,Nigeria,Financial Services,B,true,Established commercial bank with corporate and digital operations,https://www.providusbank.com/,2026-08-05,seed_for_owner_review
+Jaiz Bank Plc,Jaiz|Jaiz Bank,Nigeria,Financial Services,B,true,National non-interest bank,https://jaizbankplc.com/,2026-08-05,seed_for_owner_review
+Nigerian Inter-Bank Settlement System Plc,NIBSS|Nigeria Inter-Bank Settlement System,Nigeria,Financial Infrastructure,A,true,Systemically important national payments infrastructure,https://nibss-plc.com.ng/,2026-08-05,seed_for_owner_review
+Nigerian Exchange Group Plc,NGX Group|NGX|Nigerian Exchange,Nigeria,Financial Infrastructure,A,true,National capital-market infrastructure group,https://ngxgroup.com/,2026-08-05,seed_for_owner_review
+FMDQ Group Plc,FMDQ|FMDQ Group,Nigeria,Financial Infrastructure,A,true,Major Nigerian financial-market infrastructure group,https://fmdqgroup.com/,2026-08-05,seed_for_owner_review
+Central Securities Clearing System Plc,CSCS|CSCS Plc,Nigeria,Financial Infrastructure,A,true,Systemically important capital-market infrastructure,https://www.cscs.ng/,2026-08-05,seed_for_owner_review
+ARM Holding Company Limited,ARM|Asset and Resource Management,Nigeria,Investment Management,B,true,Large established Nigerian financial-services group,https://www.arm.com.ng/,2026-08-05,seed_for_owner_review
+Coronation Group Limited,Coronation|Coronation Group,Nigeria,Financial Services,B,true,Established Nigerian financial-services group,https://www.coronation.ng/,2026-08-05,seed_for_owner_review
+Chapel Hill Denham,Chapel Hill Denham|CHD,Nigeria,Investment Management,B,true,Leading Nigerian investment-banking and asset-management firm,https://www.chapelhilldenham.com/,2026-08-05,seed_for_owner_review
+FBNQuest Merchant Bank Limited,FBNQuest|FBN Quest,Nigeria,Investment Banking,B,true,Major Nigerian investment-banking platform,https://www.fbnquest.com/,2026-08-05,seed_for_owner_review
+Leadway Assurance Company Limited,Leadway|Leadway Assurance,Nigeria,Insurance,B,true,Large established Nigerian insurer,https://www.leadway.com/,2026-08-05,seed_for_owner_review
+AXA Mansard Insurance Plc,AXA Mansard|Mansard,Nigeria,Insurance,B,true,Major insurer with international group backing,https://www.axamansard.com/,2026-08-05,seed_for_owner_review
+AIICO Insurance Plc,AIICO|AIICO Insurance,Nigeria,Insurance,B,true,Large listed Nigerian insurer,https://www.aiicoplc.com/,2026-08-05,seed_for_owner_review
+Custodian Investment Plc,Custodian|Custodian Investment,Nigeria,Insurance,B,true,Large Nigerian financial-services and insurance group,https://www.custodianplc.com.ng/,2026-08-05,seed_for_owner_review
+MTN Nigeria Communications Plc,MTN Nigeria|MTNN|MTN,Nigeria,Telecommunications,A,true,Largest-scale telecom operator and major listed technology employer,https://www.mtn.ng/,2026-08-05,seed_for_owner_review
+Airtel Networks Limited,Airtel Nigeria|Airtel Networks|Airtel,Nigeria,Telecommunications,A,true,Major national telecom operator,https://www.airtel.com.ng/,2026-08-05,seed_for_owner_review
+Globacom Limited,Glo|Globacom|Glo Nigeria,Nigeria,Telecommunications,A,true,Major national telecom operator,https://www.gloworld.com/ng/,2026-08-05,seed_for_owner_review
+Emerging Markets Telecommunication Services Limited,T2 Mobile|T2mobile|T2|9mobile|Etisalat Nigeria|EMTS,Nigeria,Telecommunications,B,true,National telecom operator,https://www.t2mobile.com.ng/,2026-08-05,seed_for_owner_review
+IHS Nigeria Limited,IHS Towers|IHS Nigeria|IHS,Nigeria,Telecommunications Infrastructure,A,true,Major telecom infrastructure operator,https://www.ihstowers.com/,2026-08-05,seed_for_owner_review
+MainOne Cable Company Nigeria Limited,MainOne|Main One|Equinix MainOne,Nigeria,Data Infrastructure,A,true,Major West African data-centre and connectivity operator,https://www.mainone.net/,2026-08-05,seed_for_owner_review
+Rack Centre Limited,Rack Centre|RackCentre,Nigeria,Data Infrastructure,B,true,Leading carrier-neutral Nigerian data-centre operator,https://rack-centre.com/,2026-08-05,seed_for_owner_review
+ipNX Nigeria Limited,ipNX|ipNX Nigeria,Nigeria,Internet Services,B,true,Large established Nigerian internet and enterprise-network provider,https://www.ipnxnigeria.net/,2026-08-05,seed_for_owner_review
+Ericsson Nigeria Limited,Ericsson Nigeria|Ericsson,Nigeria,Telecommunications Technology,A,true,Major multinational telecom-technology employer,https://www.ericsson.com/en/about-us/company-facts/ericsson-worldwide/nigeria,2026-08-05,seed_for_owner_review
+Huawei Technologies Company Nigeria Limited,Huawei Nigeria|Huawei Technologies Nigeria|Huawei,Nigeria,Technology,A,true,Major multinational technology and telecom-infrastructure employer,https://www.huawei.com/ng/,2026-08-05,seed_for_owner_review
+Microsoft Nigeria Limited,Microsoft Nigeria|Microsoft,Nigeria,Technology,A,true,Global technology leader with Nigerian operations,https://www.microsoft.com/en-ng/,2026-08-05,seed_for_owner_review
+Google Nigeria Limited,Google Nigeria|Google,Nigeria,Technology,A,true,Global technology leader with Nigerian operations,https://about.google/intl/en_ng/,2026-08-05,seed_for_owner_review
+IBM West Africa,IBM Nigeria|IBM West Africa|IBM,Nigeria,Technology,A,true,Global enterprise-technology company operating in Nigeria,https://www.ibm.com/planetwide/ng/,2026-08-05,seed_for_owner_review
+Oracle Nigeria,Oracle Nigeria|Oracle,Nigeria,Technology,A,true,Global enterprise-software company operating in Nigeria,https://www.oracle.com/ng/,2026-08-05,seed_for_owner_review
+SAP West Africa,SAP Nigeria|SAP West Africa|SAP,Nigeria,Technology,A,true,Global enterprise-software company serving Nigeria,https://www.sap.com/africa/index.html,2026-08-05,seed_for_owner_review
+Cisco Systems Nigeria,Cisco Nigeria|Cisco,Nigeria,Technology,A,true,Global networking and enterprise-technology company,https://www.cisco.com/c/en_ng/index.html,2026-08-05,seed_for_owner_review
+Dell Technologies Nigeria,Dell Nigeria|Dell Technologies Nigeria|Dell,Nigeria,Technology,B,true,Global enterprise-technology company operating in Nigeria,https://www.dell.com/en-ng,2026-08-05,seed_for_owner_review
+HP Nigeria,HP Nigeria|Hewlett Packard Nigeria|HP,Nigeria,Technology,B,true,Global technology company operating in Nigeria,https://www.hp.com/ng-en/home.html,2026-08-05,seed_for_owner_review
+Interswitch Group,Interswitch|Interswitch Nigeria|Verve,Nigeria,Fintech,A,true,Large Nigerian payments and digital-commerce group,https://www.interswitchgroup.com/,2026-08-05,seed_for_owner_review
+Flutterwave Inc.,Flutterwave|Flutterwave Nigeria,Nigeria,Fintech,A,true,Leading African payments technology company with Nigerian operations,https://flutterwave.com/,2026-08-05,seed_for_owner_review
+Paystack Payments Limited,Paystack|Paystack Nigeria,Nigeria,Fintech,A,true,Leading Nigerian payments technology company,https://paystack.com/,2026-08-05,seed_for_owner_review
+Moniepoint Inc.,Moniepoint|Moniepoint MFB|TeamApt,Nigeria,Fintech,A,true,Leading Nigerian business-banking and payments technology company,https://moniepoint.com/,2026-08-05,seed_for_owner_review
+OPay Digital Services Limited,OPay|OPay Nigeria|Opera Pay,Nigeria,Fintech,A,true,Large Nigerian mobile-money and payments platform,https://www.opayweb.com/,2026-08-05,seed_for_owner_review
+PalmPay Limited,PalmPay|PalmPay Nigeria,Nigeria,Fintech,B,true,Large Nigerian consumer-finance and payments platform,https://www.palmpay.com/,2026-08-05,seed_for_owner_review
+Kuda Microfinance Bank,Kuda|Kuda Bank|Kuda MFB,Nigeria,Fintech,B,true,Major Nigerian digital bank and technology employer,https://kuda.com/,2026-08-05,seed_for_owner_review
+Paga Group Limited,Paga|Paga Group,Nigeria,Fintech,B,true,Established Nigerian digital-payments company,https://www.mypaga.com/,2026-08-05,seed_for_owner_review
+SystemSpecs Holdings Limited,SystemSpecs|Remita|HumanManager,Nigeria,Technology,B,true,Established Nigerian enterprise-software and payments group,https://www.systemspecs.com.ng/,2026-08-05,seed_for_owner_review
+eTranzact International Plc,eTranzact|eTranzact Nigeria,Nigeria,Fintech,B,true,Established listed Nigerian payments-technology company,https://www.etranzact.com/,2026-08-05,seed_for_owner_review
+Computer Warehouse Group Plc,CWG|CWG Plc|Computer Warehouse Group,Nigeria,Technology,B,true,Large listed Nigerian technology-services company,https://www.cwg-plc.com/,2026-08-05,seed_for_owner_review
+Jumia Nigeria,Jumia|Jumia Nigeria,Nigeria,E-commerce,B,true,Large pan-African e-commerce and technology platform,https://www.jumia.com.ng/,2026-08-05,seed_for_owner_review
+MultiChoice Nigeria Limited,MultiChoice Nigeria|DStv Nigeria|GOtv Nigeria|MultiChoice,Nigeria,Media Technology,A,true,Major pay-TV and digital-media company in Nigeria,https://www.multichoice.com/,2026-08-05,seed_for_owner_review
+Nigerian National Petroleum Company Limited,NNPC|NNPC Limited|Nigerian National Petroleum Corporation,Nigeria,Energy,A,true,National energy company with large-scale technical operations,https://www.nnpcgroup.com/,2026-08-05,seed_for_owner_review
+Nigeria LNG Limited,NLNG|Nigeria LNG,Nigeria,Energy,A,true,Major Nigerian liquefied-natural-gas company,https://www.nlng.com/,2026-08-05,seed_for_owner_review
+Shell Companies in Nigeria,Shell Nigeria|SNEPCo|Shell Petroleum Development Company|SPDC,Nigeria,Energy,A,true,Major global energy group with substantial Nigerian operations,https://www.shell.com.ng/,2026-08-05,seed_for_owner_review
+Chevron Nigeria Limited,Chevron Nigeria|Chevron,Nigeria,Energy,A,true,Major global energy company with Nigerian operations,https://www.chevron.com/worldwide/nigeria,2026-08-05,seed_for_owner_review
+ExxonMobil Nigeria,ExxonMobil Nigeria|Mobil Producing Nigeria|Exxon Mobil Nigeria,Nigeria,Energy,A,true,Major global energy company with Nigerian operations,https://corporate.exxonmobil.com/locations/nigeria,2026-08-05,seed_for_owner_review
+TotalEnergies Nigeria Plc,TotalEnergies Nigeria|Total Nigeria|TotalEnergies,Nigeria,Energy,A,true,Major global energy company with Nigerian operations,https://corporate.totalenergies.ng/,2026-08-05,seed_for_owner_review
+Seplat Energy Plc,Seplat|Seplat Energy,Nigeria,Energy,A,true,Large listed Nigerian energy company,https://www.seplatenergy.com/,2026-08-05,seed_for_owner_review
+Oando Plc,Oando|Oando Energy Resources,Nigeria,Energy,A,true,Large Nigerian integrated energy company,https://www.oandoplc.com/,2026-08-05,seed_for_owner_review
+Sahara Group Limited,Sahara Group|Sahara Energy,Nigeria,Energy,A,true,Large Nigerian energy and infrastructure group,https://www.sahara-group.com/,2026-08-05,seed_for_owner_review
+Aradel Holdings Plc,Aradel|Aradel Holdings|Niger Delta Exploration and Production,Nigeria,Energy,B,true,Large Nigerian integrated energy company,https://www.aradel.com/,2026-08-05,seed_for_owner_review
+Heirs Energies Limited,Heirs Energies|Heirs Oil and Gas,Nigeria,Energy,B,true,Large Nigerian energy company,https://www.heirsenergies.com/,2026-08-05,seed_for_owner_review
+Aiteo Group,Aiteo|Aiteo Eastern E&P,Nigeria,Energy,B,true,Large Nigerian energy group,https://aiteogroup.com/,2026-08-05,seed_for_owner_review
+Eni Nigeria,Eni Nigeria|Nigerian Agip Oil Company|NAOC|Agip Nigeria,Nigeria,Energy,A,true,Major global energy company with Nigerian operations,https://www.eni.com/en-IT/actions/global-activities/nigeria.html,2026-08-05,seed_for_owner_review
+SLB Nigeria,SLB Nigeria|Schlumberger Nigeria|Schlumberger,Nigeria,Oilfield Services,A,true,Major global oilfield-technology and services company,https://www.slb.com/,2026-08-05,seed_for_owner_review
+Halliburton Energy Services Nigeria Limited,Halliburton Nigeria|Halliburton,Nigeria,Oilfield Services,A,true,Major global oilfield-services company,https://www.halliburton.com/,2026-08-05,seed_for_owner_review
+Baker Hughes Nigeria,Baker Hughes Nigeria|Baker Hughes,Nigeria,Oilfield Services,A,true,Major global energy-technology company,https://www.bakerhughes.com/,2026-08-05,seed_for_owner_review
+Egbin Power Plc,Egbin Power|Egbin,Nigeria,Power,B,true,Large Nigerian power-generation company,https://www.egbin-power.com/,2026-08-05,seed_for_owner_review
+Geregu Power Plc,Geregu Power|Geregu,Nigeria,Power,B,true,Large listed Nigerian power-generation company,https://geregupowerplc.com/,2026-08-05,seed_for_owner_review
+Azura Power West Africa Limited,Azura Power|Azura-Edo IPP|Azura,Nigeria,Power,B,true,Large independent power producer in Nigeria,https://azurapower.com/,2026-08-05,seed_for_owner_review
+Siemens Energy Nigeria,Siemens Energy Nigeria|Siemens Nigeria|Siemens Energy,Nigeria,Energy Technology,A,true,Global energy-technology company operating in Nigeria,https://www.siemens-energy.com/,2026-08-05,seed_for_owner_review
+GE Vernova Nigeria,GE Vernova Nigeria|General Electric Nigeria|GE Nigeria,Nigeria,Energy Technology,A,true,Global energy-technology company operating in Nigeria,https://www.gevernova.com/,2026-08-05,seed_for_owner_review
+Dangote Industries Limited,Dangote Group|Dangote Industries|Dangote,Nigeria,Conglomerate,A,true,Largest-scale Nigerian industrial conglomerate,https://www.dangote.com/,2026-08-05,seed_for_owner_review
+Dangote Cement Plc,Dangote Cement|DCP,Nigeria,Cement,A,true,Large listed Nigerian industrial market leader,https://www.dangotecement.com/,2026-08-05,seed_for_owner_review
+BUA Group,BUA|BUA Group,Nigeria,Conglomerate,A,true,Large Nigerian industrial conglomerate,https://www.buagroup.com/,2026-08-05,seed_for_owner_review
+BUA Cement Plc,BUA Cement|BUACEMENT,Nigeria,Cement,A,true,Large listed Nigerian cement producer,https://www.buacement.com/,2026-08-05,seed_for_owner_review
+BUA Foods Plc,BUA Foods|BUAFOODS,Nigeria,Food Manufacturing,A,true,Large listed Nigerian food manufacturer,https://www.buafoodsplc.com/,2026-08-05,seed_for_owner_review
+Transnational Corporation Plc,Transcorp|Transcorp Group|Transnational Corporation of Nigeria,Nigeria,Conglomerate,A,true,Large listed Nigerian conglomerate,https://www.transcorpnigeria.com/,2026-08-05,seed_for_owner_review
+UAC of Nigeria Plc,UACN|UAC Nigeria|UAC of Nigeria,Nigeria,Conglomerate,B,true,Long-established listed Nigerian conglomerate,https://www.uacnplc.com/,2026-08-05,seed_for_owner_review
+Nestlé Nigeria Plc,Nestle Nigeria|Nestlé Nigeria|Nestle,Nigeria,FMCG,A,true,Major multinational FMCG manufacturer in Nigeria,https://www.nestle-cwa.com/en/jobs/nigeria,2026-08-05,seed_for_owner_review
+Nigerian Breweries Plc,Nigerian Breweries|NB Plc|Heineken Nigeria,Nigeria,FMCG,A,true,Large listed Nigerian beverage manufacturer,https://www.nbplc.com/,2026-08-05,seed_for_owner_review
+Coca-Cola Hellenic Bottling Company Nigeria,Coca-Cola HBC Nigeria|Nigerian Bottling Company|NBC|Coca Cola Nigeria,Nigeria,FMCG,A,true,Major multinational beverage manufacturer and distributor,https://ng.coca-colahellenic.com/,2026-08-05,seed_for_owner_review
+Guinness Nigeria Plc,Guinness Nigeria|Diageo Nigeria,Nigeria,FMCG,A,true,Large listed beverage company,https://www.guinness-nigeria.com/,2026-08-05,seed_for_owner_review
+Unilever Nigeria Plc,Unilever Nigeria|Unilever,Nigeria,FMCG,A,true,Major multinational FMCG company operating in Nigeria,https://www.unilevernigeria.com/,2026-08-05,seed_for_owner_review
+Flour Mills of Nigeria Plc,Flour Mills Nigeria|FMN|Golden Penny,Nigeria,Food Manufacturing,A,true,Large listed Nigerian food and agro-allied group,https://www.fmnplc.com/,2026-08-05,seed_for_owner_review
+Lafarge Africa Plc,Lafarge Africa|Lafarge Nigeria|WAPCO,Nigeria,Cement,A,true,Large listed building-materials company,https://www.lafarge.com.ng/,2026-08-05,seed_for_owner_review
+PZ Cussons Nigeria Plc,PZ Cussons Nigeria|PZ Nigeria|PZ Cussons,Nigeria,FMCG,B,true,Large established FMCG manufacturer,https://www.pzcussons.com/,2026-08-05,seed_for_owner_review
+Cadbury Nigeria Plc,Cadbury Nigeria|Mondelez Nigeria|Cadbury,Nigeria,FMCG,B,true,Large listed Nigerian food and beverage manufacturer,https://www.mondelezinternational.com/nigeria/,2026-08-05,seed_for_owner_review
+Dufil Prima Foods Plc,Dufil|Dufil Prima Foods|Indomie Nigeria,Nigeria,Food Manufacturing,B,true,Large Nigerian food manufacturer,https://www.dufil.com/,2026-08-05,seed_for_owner_review
+Promasidor Nigeria Limited,Promasidor Nigeria|Promasidor|Cowbell,Nigeria,FMCG,B,true,Large established Nigerian FMCG manufacturer,https://www.promasidor.com/en/nigeria,2026-08-05,seed_for_owner_review
+Tolaram Group Nigeria,Tolaram|Tolaram Nigeria,Nigeria,Conglomerate,A,true,"Large consumer, infrastructure and industrial group in Nigeria",https://tolaram.com/,2026-08-05,seed_for_owner_review
+CHI Limited,CHI Limited|Chivita|Hollandia,Nigeria,FMCG,B,true,Large Nigerian beverage and dairy company,https://www.chilimited.com/,2026-08-05,seed_for_owner_review
+PricewaterhouseCoopers Nigeria,PwC Nigeria|PricewaterhouseCoopers Nigeria|PwC,Nigeria,Professional Services,A,true,Big Four professional-services firm in Nigeria,https://www.pwc.com/ng/en.html,2026-08-05,seed_for_owner_review
+Deloitte Nigeria,Deloitte Nigeria|Akintola Williams Deloitte|Deloitte,Nigeria,Professional Services,A,true,Big Four professional-services firm in Nigeria,https://www2.deloitte.com/ng/en.html,2026-08-05,seed_for_owner_review
+KPMG Nigeria,KPMG Nigeria|KPMG,Nigeria,Professional Services,A,true,Big Four professional-services firm in Nigeria,https://kpmg.com/ng/en/home.html,2026-08-05,seed_for_owner_review
+Ernst & Young Nigeria,EY Nigeria|Ernst and Young Nigeria|EY,Nigeria,Professional Services,A,true,Big Four professional-services firm in Nigeria,https://www.ey.com/en_ng,2026-08-05,seed_for_owner_review
+Accenture Nigeria,Accenture Nigeria|Accenture,Nigeria,Consulting,A,true,Global technology and management consulting company,https://www.accenture.com/ng-en,2026-08-05,seed_for_owner_review
+McKinsey & Company Nigeria,McKinsey Nigeria|McKinsey Lagos|McKinsey,Nigeria,Consulting,A,true,Global management-consulting firm with Nigerian office,https://www.mckinsey.com/ng/overview,2026-08-05,seed_for_owner_review
+Boston Consulting Group Nigeria,BCG Nigeria|Boston Consulting Group Nigeria|BCG Lagos,Nigeria,Consulting,A,true,Global management-consulting firm with Nigerian operations,https://www.bcg.com/offices/lagos/default,2026-08-05,seed_for_owner_review
+Maersk Nigeria Limited,Maersk Nigeria|AP Moller Maersk Nigeria|Maersk,Nigeria,Logistics,A,true,Major global logistics and shipping company in Nigeria,https://www.maersk.com/local-information/africa/nigeria,2026-08-05,seed_for_owner_review
+DHL International Nigeria Limited,DHL Nigeria|DHL,Nigeria,Logistics,A,true,Major global logistics company in Nigeria,https://www.dhl.com/ng-en/home.html,2026-08-05,seed_for_owner_review
+Red Star Express Plc,Red Star Express|FedEx Nigeria|Red Star,Nigeria,Logistics,B,true,Large listed Nigerian logistics company and FedEx licensee,https://redstarplc.com/,2026-08-05,seed_for_owner_review
+Africa Global Logistics Nigeria,AGL Nigeria|Africa Global Logistics Nigeria|Bollore Logistics Nigeria,Nigeria,Logistics,B,true,Large African logistics operator in Nigeria,https://www.aglgroup.com/en/,2026-08-05,seed_for_owner_review
+Lekki Deep Sea Port Limited,Lekki Port|Lekki Deep Sea Port,Nigeria,Infrastructure,A,true,Major Nigerian port infrastructure company,https://lekkiport.com/,2026-08-05,seed_for_owner_review
+Air Peace Limited,Air Peace|Fly Air Peace,Nigeria,Aviation,A,true,Largest-scale Nigerian airline,https://www.flyairpeace.com/,2026-08-05,seed_for_owner_review
+Ibom Airlines Limited,Ibom Air|Ibom Airlines,Nigeria,Aviation,B,true,Major Nigerian airline with strong corporate profile,https://www.ibomair.com/,2026-08-05,seed_for_owner_review
+Emzor Pharmaceutical Industries Limited,Emzor|Emzor Pharmaceuticals,Nigeria,Pharmaceuticals,B,true,Large Nigerian pharmaceutical manufacturer,https://www.emzorpharma.com/,2026-08-05,seed_for_owner_review
+Fidson Healthcare Plc,Fidson|Fidson Healthcare,Nigeria,Pharmaceuticals,B,true,Large listed Nigerian pharmaceutical manufacturer,https://www.fidson.com/,2026-08-05,seed_for_owner_review
+May & Baker Nigeria Plc,May and Baker Nigeria|May & Baker|M&B Nigeria,Nigeria,Pharmaceuticals,B,true,Long-established listed Nigerian pharmaceutical company,https://may-baker.com/,2026-08-05,seed_for_owner_review

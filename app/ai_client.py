@@ -10,8 +10,6 @@ from pydantic import BaseModel
 from app.cv_text import CV_TEXT
 from app.schemas import (
     AIAnalysisResult,
-    AIJobScreeningResult,
-    AnalyzeMatchRequest,
 )
 
 load_dotenv()
@@ -97,101 +95,6 @@ def generate_structured_response(
             )
 
     raise RuntimeError(f"All Gemini models failed. Last error: {last_error}")
-
-
-def screen_job_quality(
-    job: AnalyzeMatchRequest,
-) -> AIJobScreeningResult:
-    """
-    Decide whether the job appears both high-end and high-paying.
-
-    This function does not compare the job to the CV.
-    """
-
-    prompt = f"""
-You are screening job opportunities before a candidate applies.
-
-Determine whether this job is BOTH:
-
-1. A high-end role
-2. A high-paying role
-
-Return only JSON matching the provided schema.
-
-STRICT HIGH-END RULES:
-
-A role may be considered high-end when it clearly includes one or more
-of the following:
-
-- Senior, lead, staff, principal, architect or management-level responsibility
-- Ownership of important systems, products, architecture or technical decisions
-- Substantial engineering complexity
-- Leadership, mentoring or strategic responsibility
-- Strong professional experience requirements
-- Significant business or technical impact
-
-A role is not high-end when it is mainly:
-
-- Internship
-- Graduate programme
-- Entry-level
-- Junior
-- Trainee
-- Apprentice
-- Assistant role
-- Basic support-only work
-- Low-responsibility administrative work
-- Unpaid or volunteer work
-
-STRICT HIGH-PAYING RULES:
-
-- Use the disclosed salary when available.
-- Judge compensation relative to the role, seniority and location.
-- Do not assume a job is high-paying merely because the company is famous.
-- Do not assume a job is high-paying merely because the title contains
-  "senior".
-- If compensation is not disclosed and there is not enough evidence,
-  return "Unknown".
-- If the disclosed compensation is clearly low for the location and
-  responsibility, return "Not high-paying".
-- Only return "High-paying" when there is reasonable evidence.
-
-Important:
-
-- Be conservative.
-- Do not invent salary information.
-- Do not invent company information.
-- Keep screening reasons brief and factual.
-
-Company:
-{job.company_name or "Not provided"}
-
-Job title:
-{job.job_title or "Not provided"}
-
-Location:
-{job.country_location or "Not provided"}
-
-Job type:
-{job.job_type or "Not provided"}
-
-Job level:
-{job.job_level or "Not provided"}
-
-Salary:
-{job.salary_text or "Not disclosed"}
-
-Job link:
-{job.job_link or "Not provided"}
-
-Job description:
-{job.job_description}
-"""
-
-    return generate_structured_response(
-        prompt=prompt,
-        schema_class=AIJobScreeningResult,
-    )
 
 
 def analyze_cv_match(job_description: str) -> AIAnalysisResult:
