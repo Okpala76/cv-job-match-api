@@ -8,6 +8,7 @@ from app.company_registry import APPROVED_COMPANY_REGISTRY
 from app.opportunity_gate import evaluate_opportunity_gate
 from app.rules import calculate_match_result
 from app.schemas import AnalyzeMatchRequest, AnalyzeMatchResponse
+from app.role_ceiling import evaluate_role_ceiling
 
 app = FastAPI(title="CV Job Match API")
 
@@ -66,17 +67,58 @@ def analyze_match(
                 decision="Skip",
             )
 
-        # Batch 3 will add the role-ceiling gate here, before CV matching.
+        role_ceiling = evaluate_role_ceiling(request)
+
+        if role_ceiling.role_ceiling_decision != "Accepted":
+            if role_ceiling.role_ceiling_decision == "Manual review":
+                advice = (
+                    "Do not apply yet. Manually confirm "
+                    "that this role is realistic for a "
+                    "candidate with under 3 years of "
+                    "experience."
+                )
+            else:
+                advice = (
+                    "Do not apply. The role is above the " "current experience ceiling."
+                )
+
+            screening_data = screening.model_dump(
+                exclude={
+                    "job_accepted",
+                    "screening_decision",
+                    "screening_reasons",
+                }
+            )
+
+            return AnalyzeMatchResponse(
+                **screening_data,
+                job_accepted=False,
+                screening_decision=(role_ceiling.role_ceiling_decision),
+                screening_reasons=[
+                    *screening.screening_reasons,
+                    *role_ceiling.role_ceiling_reasons,
+                ],
+                **role_ceiling.model_dump(),
+                match_percentage=None,
+                match_level=None,
+                matched_skills=[],
+                missing_skills=[],
+                tailoring_advice=advice,
+                decision="Skip",
+            )
+
         analysis = analyze_cv_match(request.job_description)
+
         match_level, decision = calculate_match_result(analysis.match_percentage)
 
         return AnalyzeMatchResponse(
             **screening.model_dump(),
-            match_percentage=analysis.match_percentage,
+            **role_ceiling.model_dump(),
+            match_percentage=(analysis.match_percentage),
             match_level=match_level,
-            matched_skills=analysis.matched_skills,
-            missing_skills=analysis.missing_skills,
-            tailoring_advice=analysis.tailoring_advice,
+            matched_skills=(analysis.matched_skills),
+            missing_skills=(analysis.missing_skills),
+            tailoring_advice=(analysis.tailoring_advice),
             decision=decision,
         )
 
