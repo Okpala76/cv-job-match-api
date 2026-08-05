@@ -24,69 +24,40 @@ class AnalyzeMatchRequest(BaseModel):
         return cleaned_value
 
 
-class AIJobScreeningResult(BaseModel):
-    job_quality_level: Literal[
-        "High-end",
-        "Not high-end",
-        "Unknown",
-    ]
-
-    salary_status: Literal[
-        "High-paying",
-        "Not high-paying",
-        "Unknown",
-    ]
-
+class OpportunityGateResult(BaseModel):
+    job_accepted: bool
+    screening_decision: Literal["Accepted", "Rejected", "Manual review"]
     screening_reasons: list[str] = Field(min_length=1)
+    salary_status: Literal["High-paying", "Not high-paying", "Unknown"]
+    job_quality_level: Literal["High-end", "Not high-end", "Unknown"]
+    company_status: Literal["Approved", "Not approved", "Unknown"]
+    matched_company_name: str | None = None
+    company_tier: Literal["A", "B"] | None = None
+    monthly_salary_ngn: int | None = Field(default=None, ge=0)
 
 
 class AIAnalysisResult(BaseModel):
     match_percentage: int = Field(ge=0, le=100)
-    matched_skills: list[str]
-    missing_skills: list[str]
+    matched_skills: list[str] = Field(default_factory=list)
+    missing_skills: list[str] = Field(default_factory=list)
     tailoring_advice: str
 
 
 class AnalyzeMatchResponse(BaseModel):
     job_accepted: bool
+    screening_decision: Literal["Accepted", "Rejected", "Manual review"]
+    screening_reasons: list[str] = Field(default_factory=list)
+    salary_status: Literal["High-paying", "Not high-paying", "Unknown"]
+    job_quality_level: Literal["High-end", "Not high-end", "Unknown"]
 
-    screening_decision: Literal[
-        "Accepted",
-        "Rejected",
-        "Manual review",
-    ]
+    company_status: Literal["Approved", "Not approved", "Unknown"]
+    matched_company_name: str | None = None
+    company_tier: Literal["A", "B"] | None = None
+    monthly_salary_ngn: int | None = Field(default=None, ge=0)
 
-    screening_reasons: list[str]
-
-    salary_status: Literal[
-        "High-paying",
-        "Not high-paying",
-        "Unknown",
-    ]
-
-    job_quality_level: Literal[
-        "High-end",
-        "Not high-end",
-        "Unknown",
-    ]
-
-    match_percentage: int | None = None
-
-    match_level: (
-        Literal[
-            "Strong",
-            "Medium",
-            "Weak",
-        ]
-        | None
-    ) = None
-
-    matched_skills: list[str] = []
-    missing_skills: list[str] = []
+    match_percentage: int | None = Field(default=None, ge=0, le=100)
+    match_level: Literal["Strong", "Medium", "Weak"] | None = None
+    matched_skills: list[str] = Field(default_factory=list)
+    missing_skills: list[str] = Field(default_factory=list)
     tailoring_advice: str = ""
-
-    decision: Literal[
-        "Apply",
-        "Tailor first",
-        "Skip",
-    ]
+    decision: Literal["Apply", "Tailor first", "Skip"]
