@@ -75,7 +75,9 @@ Assistants Confirmation: ${assistantsConfirmation}
 Paid Status: ${paidStatus}
 
 Payment Rule:
-₦600 per valid application.
+Apply decision: ₦300 after successful submission and approval.
+Tailor first decision: ₦450 after tailoring, submission and approval.
+Skip decision: ₦0.
 
 Please review this summary and update your confirmation status in the sheet.
 
@@ -85,7 +87,7 @@ Thank you.
   MailApp.sendEmail({
     to: OWNER_EMAIL + "," + Assistants_EMAIL,
     subject: subject,
-    body: body
+    body: body,
   });
 }
 
@@ -93,9 +95,5 @@ function formatDate(date) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const timeZone = ss.getSpreadsheetTimeZone();
 
-  return Utilities.formatDate(
-    new Date(date),
-    timeZone,
-    "dd-MM-yyyy"
-  );
+  return Utilities.formatDate(new Date(date), timeZone, "dd-MM-yyyy");
 }
