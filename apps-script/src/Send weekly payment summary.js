@@ -1,6 +1,6 @@
 function sendWeeklyPaymentSummary() {
   const OWNER_EMAIL = "okpalaogochukwu76@gmail.com";
-  const Assistants_EMAIL = "felixefe609@gmail.com";
+  const Assistants_EMAIL = "";
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName("Payment Summary");
@@ -75,8 +75,8 @@ Assistants Confirmation: ${assistantsConfirmation}
 Paid Status: ${paidStatus}
 
 Payment Rule:
-Apply decision: ₦300 after successful submission and approval.
-Tailor first decision: ₦450 after tailoring, submission and approval.
+₦200 per eligible submitted application.
+Tailor-first applications qualify only after tailoring is completed.
 Skip decision: ₦0.
 
 Please review this summary and update your confirmation status in the sheet.

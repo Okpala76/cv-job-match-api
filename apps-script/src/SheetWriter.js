@@ -65,14 +65,28 @@ function jmClearAnalysisResult_(sheet, selectedRow) {
   const headersToClear = [
     outputHeaders.screeningDecision,
     outputHeaders.screeningReasons,
+
+    outputHeaders.companyStatus,
+    outputHeaders.matchedCompanyName,
+    outputHeaders.companyTier,
+    outputHeaders.monthlySalaryNgn,
+
     outputHeaders.salaryStatus,
     outputHeaders.jobQualityLevel,
+
+    outputHeaders.roleCeilingDecision,
+    outputHeaders.detectedRoleLevel,
+    outputHeaders.roleCeilingReasons,
+    outputHeaders.minimumExperienceYears,
+    outputHeaders.maximumExperienceYears,
+
     outputHeaders.matchPercentage,
     outputHeaders.matchLevel,
     outputHeaders.matchedSkills,
     outputHeaders.missingSkills,
     outputHeaders.tailoringAdvice,
     outputHeaders.decision,
+
     outputHeaders.analysisStatus,
   ];
 
@@ -85,9 +99,6 @@ function jmClearAnalysisResult_(sheet, selectedRow) {
   });
 }
 
-/**
- * Writes the completed FastAPI response into the selected row.
- */
 function jmWriteApiResult_(sheet, selectedRow, result) {
   const outputHeaders = JOB_MATCH_CONFIG.outputHeaders;
 
@@ -101,15 +112,44 @@ function jmWriteApiResult_(sheet, selectedRow, result) {
     "\n",
   );
 
+  valuesByHeader[outputHeaders.companyStatus] = result.company_status || "";
+
+  valuesByHeader[outputHeaders.matchedCompanyName] =
+    result.matched_company_name || "";
+
+  valuesByHeader[outputHeaders.companyTier] = result.company_tier || "";
+
+  valuesByHeader[outputHeaders.monthlySalaryNgn] = jmOptionalNumber_(
+    result.monthly_salary_ngn,
+  );
+
   valuesByHeader[outputHeaders.salaryStatus] = result.salary_status || "";
 
   valuesByHeader[outputHeaders.jobQualityLevel] =
     result.job_quality_level || "";
 
-  valuesByHeader[outputHeaders.matchPercentage] =
-    result.match_percentage === null || result.match_percentage === undefined
-      ? ""
-      : Number(result.match_percentage);
+  valuesByHeader[outputHeaders.roleCeilingDecision] =
+    result.role_ceiling_decision || "";
+
+  valuesByHeader[outputHeaders.detectedRoleLevel] =
+    result.detected_role_level || "";
+
+  valuesByHeader[outputHeaders.roleCeilingReasons] = jmJoinList_(
+    result.role_ceiling_reasons,
+    "\n",
+  );
+
+  valuesByHeader[outputHeaders.minimumExperienceYears] = jmOptionalNumber_(
+    result.minimum_required_experience_years,
+  );
+
+  valuesByHeader[outputHeaders.maximumExperienceYears] = jmOptionalNumber_(
+    result.maximum_required_experience_years,
+  );
+
+  valuesByHeader[outputHeaders.matchPercentage] = jmOptionalNumber_(
+    result.match_percentage,
+  );
 
   valuesByHeader[outputHeaders.matchLevel] = result.match_level || "";
 
@@ -139,15 +179,15 @@ function jmWriteApiResult_(sheet, selectedRow, result) {
       .setValue(valuesByHeader[header]);
   });
 
-  /*
-   * Improve readability for longer result cells.
-   */
-  [
+  const wrappedHeaders = [
     outputHeaders.screeningReasons,
+    outputHeaders.roleCeilingReasons,
     outputHeaders.matchedSkills,
     outputHeaders.missingSkills,
     outputHeaders.tailoringAdvice,
-  ].forEach(function (header) {
+  ];
+
+  wrappedHeaders.forEach(function (header) {
     const columnIndex = jmFindRequiredColumn_(headerMap, [header], header);
 
     sheet.getRange(selectedRow, columnIndex + 1).setWrap(true);
@@ -239,4 +279,18 @@ function jmReadCell_(rowValues, columnIndex) {
   }
 
   return String(rowValues[columnIndex] || "").trim();
+}
+
+function jmOptionalNumber_(value) {
+  if (value === null || value === undefined || value === "") {
+    return "";
+  }
+
+  const numberValue = Number(value);
+
+  if (!Number.isFinite(numberValue)) {
+    return "";
+  }
+
+  return numberValue;
 }
