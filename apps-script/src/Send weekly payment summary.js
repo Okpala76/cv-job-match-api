@@ -1,6 +1,6 @@
 function sendWeeklyPaymentSummary() {
   const OWNER_EMAIL = "okpalaogochukwu76@gmail.com";
-  const Assistants_EMAIL = "";
+  const Assistants_EMAIL = "preciousnzechukwu@gmail.com";
 
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const sheet = ss.getSheetByName("Payment Summary");

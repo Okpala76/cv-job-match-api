@@ -787,13 +787,13 @@ function setupSetupSheet_(sheet) {
     [
       "Payment",
       "Apply rate",
-      "₦300",
+      "₦200",
       "Potential rate set automatically from the API decision.",
     ],
     [
       "Payment",
       "Tailor-first rate",
-      "₦450",
+      "₦200",
       "Payable only after tailoring is confirmed.",
     ],
     ["Payment", "Skip rate", "₦0", "Skipped jobs do not qualify for payment."],
@@ -1005,7 +1005,7 @@ function setupInstructionsSheet_(sheet) {
       8,
       "For Tailor first",
       "Tailor the CV before applying and set Tailoring Completed? to Yes.",
-      "Potential payment rate is automatically ₦450.",
+      "Potential payment rate is automatically ₦250.",
     ],
     [9, "For Skip", "Do not submit the application.", "Payment is ₦0."],
     [
