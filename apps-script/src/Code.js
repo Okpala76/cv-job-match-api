@@ -103,14 +103,36 @@ function analyzeSelectedRow() {
 
     const scoreMessage =
       result.match_percentage === null || result.match_percentage === undefined
-        ? "No CV score was calculated."
-        : `CV match: ${result.match_percentage}%`;
+        ? "CV match: Not calculated"
+        : `CV match: ${result.match_percentage}% ` + `(${result.match_level})`;
+
+    const companyMessage =
+      result.company_status === "Approved"
+        ? `${result.matched_company_name} ` + `(Tier ${result.company_tier})`
+        : result.company_status;
+
+    const roleMessage = result.role_ceiling_decision
+      ? `${result.role_ceiling_decision} ` +
+        `(${result.detected_role_level || "Unspecified"})`
+      : "Not evaluated";
+
+    const potentialPayment =
+      result.decision === "Apply"
+        ? JOB_MATCH_CONFIG.paymentRates.Apply
+        : result.decision === "Tailor first"
+          ? JOB_MATCH_CONFIG.paymentRates.TailorFirst
+          : JOB_MATCH_CONFIG.paymentRates.Skip;
 
     ui.alert(
       "Analysis complete",
-      `Screening: ${result.screening_decision}\n` +
-        `${scoreMessage}\n` +
+      [
+        `Opportunity gate: ${result.screening_decision}`,
+        `Company: ${companyMessage}`,
+        `Role ceiling: ${roleMessage}`,
+        scoreMessage,
         `Decision: ${result.decision}`,
+        `Potential payment rate: ₦${potentialPayment}`,
+      ].join("\n"),
       ui.ButtonSet.OK,
     );
   } catch (error) {
