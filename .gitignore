@@ -1,4 +1,5 @@
-
+*.py[cod]
+.pytest_cache/
 
 #Ignore vscode AI rules
 .github\instructions\codacy.instructions.md
