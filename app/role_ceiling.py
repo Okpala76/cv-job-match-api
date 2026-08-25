@@ -7,13 +7,25 @@ from app.schemas import (
     RoleCeilingResult,
 )
 
-_UNPAID_TERMS = (
-    "unpaid",
+_ROLE_FLOOR_TERMS = (
+    "intern",
+    "internship",
+    "graduate trainee",
+    "management trainee",
+    "trainee",
+    "apprentice",
+    "apprenticeship",
+    "nysc",
     "volunteer",
 )
 
 
 _LEADERSHIP_TITLE_TERMS = (
+    "manager",
+    "director",
+    "head of",
+    "vice president",
+    "vp",
     "staff engineer",
     "staff software engineer",
     "principal engineer",
@@ -34,6 +46,26 @@ _LEADERSHIP_TITLE_TERMS = (
     "lead engineer",
     "lead developer",
     "team lead",
+    "director of engineering",
+    "engineering director",
+    "vice president of engineering",
+    "vp engineering",
+    "chief technology officer",
+    "cto",
+)
+
+
+_MANAGERIAL_TITLE_TERMS = (
+    "manager",
+    "director",
+    "head of",
+    "vice president",
+    "vp",
+    "engineering manager",
+    "software engineering manager",
+    "development manager",
+    "head of engineering",
+    "head of technology",
     "director of engineering",
     "engineering director",
     "vice president of engineering",
@@ -100,7 +132,7 @@ _EXPERIENCE_SINGLE_PATTERN = re.compile(
     r"(?P<years>\d{1,2})\s*"
     r"(?P<plus>\+)?\s*"
     r"(?:years?|yrs?)\b"
-    r"(?=[^.\n]{0,80}\bexperience\b)",
+    r"(?=[^.\n]{0,80}\b(?:experience|required)\b)",
     re.IGNORECASE,
 )
 
@@ -164,8 +196,6 @@ def _extract_experience_requirement(
 
         prefix = (match.group("prefix") or "").lower()
 
-        has_plus = bool(match.group("plus"))
-
         if prefix in {
             "over",
             "more than",
@@ -173,9 +203,6 @@ def _extract_experience_requirement(
             years += 1
 
         minimums.append(years)
-
-        if not prefix and not has_plus:
-            maximums.append(years)
 
     minimum_required = max(minimums) if minimums else None
 
@@ -238,30 +265,14 @@ def _detect_role_level(
 def evaluate_role_ceiling(
     job: AnalyzeMatchRequest,
 ) -> RoleCeilingResult:
-    """
-    Reject roles clearly above the candidate's level.
-
-    Lower-level roles remain acceptable, especially
-    when they are opportunities at approved companies.
-    """
+    """Apply the role floor and five-year minimum-experience ceiling."""
 
     title_and_level = _normalize_text(
-        " ".join(
-            [
-                job.job_title,
-                job.job_level,
-            ]
-        )
+        f"{job.job_title} {job.job_level} {job.job_type}"
     )
 
     full_job_text = _normalize_text(
-        " ".join(
-            [
-                job.job_title,
-                job.job_level,
-                job.job_description,
-            ]
-        )
+        f"{job.job_title} {job.job_level} {job.job_description}"
     )
 
     (
@@ -271,50 +282,32 @@ def evaluate_role_ceiling(
 
     detected_level = _detect_role_level(title_and_level)
 
-    if not job.job_title.strip():
-        return RoleCeilingResult(
-            role_ceiling_decision="Manual review",
-            detected_role_level="Unspecified",
-            role_ceiling_reasons=[
-                "Job title was not provided, so the " "role level cannot be confirmed."
-            ],
-            minimum_required_experience_years=(minimum_years),
-            maximum_required_experience_years=(maximum_years),
-        )
-
-    if _contains_term(
+    if _contains_term(title_and_level, _ROLE_FLOOR_TERMS) or _contains_term(
         full_job_text,
-        _UNPAID_TERMS,
+        ("unpaid",),
     ):
         return RoleCeilingResult(
             role_ceiling_decision="Rejected",
             detected_role_level=detected_level,
             role_ceiling_reasons=[
-                (
-                    "Unpaid and volunteer roles are "
-                    "outside the approved opportunity scope."
-                )
+                "The role is an internship, trainee, apprenticeship, NYSC, volunteer, or unpaid opportunity below the role floor."
             ],
-            minimum_required_experience_years=(minimum_years),
-            maximum_required_experience_years=(maximum_years),
+            minimum_required_experience_years=minimum_years,
+            maximum_required_experience_years=maximum_years,
         )
 
-    if detected_level == "Leadership":
+    if not job.job_title.strip():
         return RoleCeilingResult(
-            role_ceiling_decision="Rejected",
-            detected_role_level=detected_level,
+            role_ceiling_decision="Manual review",
+            detected_role_level="Unspecified",
             role_ceiling_reasons=[
-                (
-                    "The title indicates a staff, "
-                    "principal, architect, lead, manager, "
-                    "director, or executive-level role."
-                )
+                "Job title was not provided, so the role level cannot be confirmed."
             ],
             minimum_required_experience_years=(minimum_years),
             maximum_required_experience_years=(maximum_years),
         )
 
-    if minimum_years is not None and minimum_years >= 5:
+    if minimum_years is not None and minimum_years >= 6:
         return RoleCeilingResult(
             role_ceiling_decision="Rejected",
             detected_role_level=detected_level,
@@ -322,61 +315,35 @@ def evaluate_role_ceiling(
                 (
                     f"The role requires at least "
                     f"{minimum_years} years of experience, "
-                    "which is above the current ceiling "
-                    "of 4 years."
+                    "which is above the 5-year ceiling."
                 )
             ],
             minimum_required_experience_years=(minimum_years),
             maximum_required_experience_years=(maximum_years),
         )
 
-    if detected_level == "Senior":
-        if minimum_years is not None:
-            reason = (
-                "The role is senior-level and requires "
-                f"at least {minimum_years} years of "
-                "experience."
-            )
-        else:
-            reason = (
-                "The role is senior-level, but a clear "
-                "experience requirement was not found."
-            )
-
+    if minimum_years is None and _contains_term(
+        title_and_level,
+        _MANAGERIAL_TITLE_TERMS,
+    ):
         return RoleCeilingResult(
             role_ceiling_decision="Manual review",
             detected_role_level=detected_level,
             role_ceiling_reasons=[
-                reason,
-                (
-                    "Confirm that the responsibilities "
-                    "are realistic for a candidate with "
-                    "under 3 years of experience."
-                ),
+                "The title is managerial or executive-level, but no reliable minimum experience requirement was found."
             ],
             minimum_required_experience_years=(minimum_years),
             maximum_required_experience_years=(maximum_years),
         )
 
-    reasons = [
-        (
-            "The role title does not indicate a level "
-            "above the current experience ceiling."
-        )
-    ]
-
     if minimum_years is None:
-        reasons.append(
-            ("No explicit experience requirement " "above 4 years was found.")
-        )
+        reasons = [
+            "No reliable minimum experience requirement above the 5-year ceiling was found."
+        ]
     else:
-        reasons.append(
-            (
-                "The minimum stated experience "
-                f"requirement is {minimum_years} years, "
-                "which is within the 0–4 year ceiling."
-            )
-        )
+        reasons = [
+            f"Role requires {minimum_years} years of experience, which is within the 5-year ceiling."
+        ]
 
     return RoleCeilingResult(
         role_ceiling_decision="Accepted",
