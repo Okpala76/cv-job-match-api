@@ -24,16 +24,9 @@ class AnalyzeMatchRequest(BaseModel):
         return cleaned_value
 
 
-class OpportunityGateResult(BaseModel):
-    job_accepted: bool
-    screening_decision: Literal["Accepted", "Rejected", "Manual review"]
-    screening_reasons: list[str] = Field(min_length=1)
-    salary_status: Literal["High-paying", "Not high-paying", "Unknown"]
-    job_quality_level: Literal["High-end", "Not high-end", "Unknown"]
-    company_status: Literal["Approved", "Not approved", "Unknown"]
-    matched_company_name: str | None = None
-    company_tier: Literal["A", "B"] | None = None
-    monthly_salary_ngn: int | None = Field(default=None, ge=0)
+class GeographyResult(BaseModel):
+    geography_decision: Literal["Accepted", "Rejected", "Manual review"]
+    geography_reason: str = Field(min_length=1)
 
 
 class RoleCeilingResult(BaseModel):
@@ -78,10 +71,12 @@ class AnalyzeMatchResponse(BaseModel):
     job_accepted: bool
     screening_decision: Literal["Accepted", "Rejected", "Manual review"]
     screening_reasons: list[str] = Field(default_factory=list)
-    salary_status: Literal["High-paying", "Not high-paying", "Unknown"]
-    job_quality_level: Literal["High-end", "Not high-end", "Unknown"]
+    geography_decision: Literal["Accepted", "Rejected", "Manual review"]
+    geography_reason: str
+    salary_status: Literal["High-paying", "Not high-paying", "Unknown"] = "Unknown"
+    job_quality_level: Literal["High-end", "Not high-end", "Unknown"] = "Unknown"
 
-    company_status: Literal["Approved", "Not approved", "Unknown"]
+    company_status: Literal["Approved", "Not approved", "Unknown"] = "Unknown"
     matched_company_name: str | None = None
     company_tier: Literal["A", "B"] | None = None
     monthly_salary_ngn: int | None = Field(default=None, ge=0)

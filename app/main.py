@@ -4,11 +4,10 @@ from typing import Annotated
 from fastapi import FastAPI, Header, HTTPException
 
 from app.ai_client import analyze_cv_match
-from app.company_registry import APPROVED_COMPANY_REGISTRY
-from app.opportunity_gate import evaluate_opportunity_gate
+from app.geography import evaluate_geography
+from app.role_ceiling import evaluate_role_ceiling
 from app.rules import calculate_match_result
 from app.schemas import AnalyzeMatchRequest, AnalyzeMatchResponse
-from app.role_ceiling import evaluate_role_ceiling
 
 app = FastAPI(title="CV Job Match API")
 
@@ -30,11 +29,8 @@ def verify_api_key(x_api_key: str | None) -> None:
 
 
 @app.get("/health")
-def health_check() -> dict[str, str | int]:
-    return {
-        "status": "ok",
-        "approved_company_count": APPROVED_COMPANY_REGISTRY.company_count,
-    }
+def health_check() -> dict[str, str]:
+    return {"status": "ok"}
 
 
 @app.post(
@@ -48,17 +44,20 @@ def analyze_match(
     verify_api_key(x_api_key)
 
     try:
-        screening = evaluate_opportunity_gate(request)
+        geography = evaluate_geography(request)
 
-        if not screening.job_accepted:
+        if geography.geography_decision != "Accepted":
             advice = (
-                "Do not apply yet. Confirm the company or compensation."
-                if screening.screening_decision == "Manual review"
-                else "Do not apply. The opportunity failed the company/salary gate."
+                "Do not apply yet. Manually confirm that candidates in Africa are eligible."
+                if geography.geography_decision == "Manual review"
+                else "Do not apply. The role is not available to candidates in Africa."
             )
 
             return AnalyzeMatchResponse(
-                **screening.model_dump(),
+                job_accepted=False,
+                screening_decision=geography.geography_decision,
+                screening_reasons=[geography.geography_reason],
+                **geography.model_dump(),
                 match_percentage=None,
                 match_level=None,
                 matched_skills=[],
@@ -72,32 +71,21 @@ def analyze_match(
         if role_ceiling.role_ceiling_decision != "Accepted":
             if role_ceiling.role_ceiling_decision == "Manual review":
                 advice = (
-                    "Do not apply yet. Manually confirm "
-                    "that this role is realistic for a "
-                    "candidate with under 3 years of "
-                    "experience."
+                    "Do not apply yet. Manually confirm the role's minimum experience requirement."
                 )
             else:
                 advice = (
                     "Do not apply. The role is above the " "current experience ceiling."
                 )
 
-            screening_data = screening.model_dump(
-                exclude={
-                    "job_accepted",
-                    "screening_decision",
-                    "screening_reasons",
-                }
-            )
-
             return AnalyzeMatchResponse(
-                **screening_data,
                 job_accepted=False,
                 screening_decision=(role_ceiling.role_ceiling_decision),
                 screening_reasons=[
-                    *screening.screening_reasons,
+                    geography.geography_reason,
                     *role_ceiling.role_ceiling_reasons,
                 ],
+                **geography.model_dump(),
                 **role_ceiling.model_dump(),
                 match_percentage=None,
                 match_level=None,
@@ -112,7 +100,13 @@ def analyze_match(
         match_level, decision = calculate_match_result(analysis.match_percentage)
 
         return AnalyzeMatchResponse(
-            **screening.model_dump(),
+            job_accepted=True,
+            screening_decision="Accepted",
+            screening_reasons=[
+                geography.geography_reason,
+                *role_ceiling.role_ceiling_reasons,
+            ],
+            **geography.model_dump(),
             **role_ceiling.model_dump(),
             match_percentage=(analysis.match_percentage),
             match_level=match_level,
