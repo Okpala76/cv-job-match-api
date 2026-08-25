@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import FastAPI, Header, HTTPException
 
 from app.ai_client import analyze_cv_match
+from app.company_quality import assess_company_quality
 from app.geography import evaluate_geography
 from app.role_ceiling import evaluate_role_ceiling
 from app.rules import calculate_match_result
@@ -95,6 +96,34 @@ def analyze_match(
                 decision="Skip",
             )
 
+        company_quality = assess_company_quality(request)
+
+        if company_quality.company_quality_decision != "Accepted":
+            advice = (
+                "Do not apply yet. Manually review the company's public evidence."
+                if company_quality.company_quality_decision == "Manual review"
+                else "Do not apply. The company did not meet the quality threshold."
+            )
+
+            return AnalyzeMatchResponse(
+                job_accepted=False,
+                screening_decision=company_quality.company_quality_decision,
+                screening_reasons=[
+                    geography.geography_reason,
+                    *role_ceiling.role_ceiling_reasons,
+                    *company_quality.company_quality_reasons,
+                ],
+                **geography.model_dump(),
+                **role_ceiling.model_dump(),
+                **company_quality.model_dump(),
+                match_percentage=None,
+                match_level=None,
+                matched_skills=[],
+                missing_skills=[],
+                tailoring_advice=advice,
+                decision="Skip",
+            )
+
         analysis = analyze_cv_match(request.job_description)
 
         match_level, decision = calculate_match_result(analysis.match_percentage)
@@ -105,9 +134,11 @@ def analyze_match(
             screening_reasons=[
                 geography.geography_reason,
                 *role_ceiling.role_ceiling_reasons,
+                *company_quality.company_quality_reasons,
             ],
             **geography.model_dump(),
             **role_ceiling.model_dump(),
+            **company_quality.model_dump(),
             match_percentage=(analysis.match_percentage),
             match_level=match_level,
             matched_skills=(analysis.matched_skills),
