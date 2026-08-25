@@ -4,13 +4,10 @@ from typing import TypeVar
 from dotenv import load_dotenv
 from google import genai
 from google.genai import types
-
 from pydantic import BaseModel
 
 from app.cv_text import CV_TEXT
-from app.schemas import (
-    AIAnalysisResult,
-)
+from app.schemas import AIAnalysisResult
 
 load_dotenv()
 
@@ -81,7 +78,7 @@ def generate_structured_response(
 
             return result
 
-        except Exception as error:
+        except Exception as error:  # noqa: BLE001
             last_error = error
 
             print(
