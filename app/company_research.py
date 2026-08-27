@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 
 from google.genai import types
 
-from app.ai_client import MODEL_CANDIDATES, client
+from app.ai_client import MODEL_CANDIDATES, AIProviderError, client
 from app.schemas import (
     AnalyzeMatchRequest,
     CompanyEvidence,
@@ -155,4 +155,6 @@ def research_company(job: AnalyzeMatchRequest) -> CompanyResearchResult:
         except Exception as error:  # noqa: BLE001
             last_error = error
 
-    raise RuntimeError(f"All grounded company research models failed: {last_error}")
+    raise AIProviderError(
+        f"All grounded company research models failed: {last_error}"
+    ) from last_error

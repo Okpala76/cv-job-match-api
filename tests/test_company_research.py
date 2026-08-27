@@ -1,6 +1,8 @@
+import pytest
 from google.genai import types
 
 from app import company_research
+from app.ai_client import AIProviderError
 from app.schemas import AnalyzeMatchRequest, CompanyResearchDraft
 
 
@@ -83,3 +85,23 @@ def test_grounded_research_extracts_google_search_citations(monkeypatch) -> None
     assert len(result.company_evidence) == 2
     assert result.company_evidence[0].claim == "The company is publicly listed."
     assert "https://unused.example/result" not in result.company_sources
+
+
+def test_search_runtime_error_is_wrapped_as_provider_failure(monkeypatch) -> None:
+    def fail_generate_content(*, model, contents, config):
+        raise RuntimeError("Google Search grounding rejected the request")
+
+    monkeypatch.setattr(
+        company_research.client.models,
+        "generate_content",
+        fail_generate_content,
+    )
+
+    with pytest.raises(
+        AIProviderError,
+        match=(
+            "All grounded company research models failed: "
+            "Google Search grounding rejected the request"
+        ),
+    ):
+        company_research.research_company(make_job())
