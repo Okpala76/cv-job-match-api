@@ -12,14 +12,21 @@ function sendWeeklyPaymentSummary() {
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
 
-  const weekCol = headers.indexOf("Week");
   const startCol = headers.indexOf("Week Start");
   const endCol = headers.indexOf("Week End");
-  const totalCol = headers.indexOf("Total Applications");
-  const validCol = headers.indexOf("Valid Applications");
-  const paymentCol = headers.indexOf("Payment Due");
-  const confirmedCol = headers.indexOf("Confirmation");
-  const paidCol = headers.indexOf("Paid?");
+  const eligibleCol = headers.indexOf("Eligible Applications");
+  const paymentCol = headers.indexOf("Total Payment Due");
+  const statusCol = headers.indexOf("Payment Status");
+
+  if (
+    startCol === -1 ||
+    endCol === -1 ||
+    eligibleCol === -1 ||
+    paymentCol === -1 ||
+    statusCol === -1
+  ) {
+    throw new Error("Payment Summary is missing required V2 columns.");
+  }
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -48,38 +55,31 @@ function sendWeeklyPaymentSummary() {
     return;
   }
 
-  const week = targetRow[weekCol];
   const weekStart = formatDate(targetRow[startCol]);
   const weekEnd = formatDate(targetRow[endCol]);
-  const totalApplications = targetRow[totalCol];
-  const validApplications = targetRow[validCol];
+  const eligibleApplications = targetRow[eligibleCol];
   const paymentDue = targetRow[paymentCol];
-  const assistantsConfirmation = targetRow[confirmedCol];
-  const paidStatus = targetRow[paidCol];
+  const paymentStatus = targetRow[statusCol];
 
-  const subject = `Weekly Application Payment Summary - ${week}`;
+  const subject = `Weekly Application Payment Summary - ${weekStart}`;
 
   const body = `
 Hello,
 
 Here is the weekly job application payment summary.
 
-Week: ${week}
 Period: ${weekStart} - ${weekEnd}
 
-Total Applications: ${totalApplications}
-Valid Applications: ${validApplications}
-Payment Due: ₦${Number(paymentDue).toLocaleString()}
-
-Assistants Confirmation: ${assistantsConfirmation}
-Paid Status: ${paidStatus}
+Eligible Applications: ${eligibleApplications}
+Total Payment Due: ₦${Number(paymentDue).toLocaleString()}
+Payment Status: ${paymentStatus}
 
 Payment Rule:
 ₦200 per eligible submitted application.
 Tailor-first applications qualify only after tailoring is completed.
 Skip decision: ₦0.
 
-Please review this summary and update your confirmation status in the sheet.
+Please review this summary and update the payment status in the sheet.
 
 Thank you.
 `;

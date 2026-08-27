@@ -136,12 +136,6 @@ class AnalyzeMatchResponse(BaseModel):
     screening_reasons: list[str] = Field(default_factory=list)
     geography_decision: Literal["Accepted", "Rejected", "Manual review"]
     geography_reason: str
-    salary_status: Literal["High-paying", "Not high-paying", "Unknown"] = "Unknown"
-    job_quality_level: Literal["High-end", "Not high-end", "Unknown"] = "Unknown"
-
-    company_status: Literal["Approved", "Not approved", "Unknown"] = "Unknown"
-    matched_company_name: str | None = None
-    company_tier: Literal["A", "B"] | None = None
     monthly_salary_ngn: int | None = Field(default=None, ge=0)
     role_ceiling_decision: (
         Literal[
