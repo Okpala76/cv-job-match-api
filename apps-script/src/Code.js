@@ -1,5 +1,5 @@
 /**
- * Main Batch 4 function.
+ * Runs the complete V2 analysis pipeline for the selected row.
  *
  * The sheet button and menu should call this function.
  */
@@ -104,34 +104,37 @@ function analyzeSelectedRow() {
     const scoreMessage =
       result.match_percentage === null || result.match_percentage === undefined
         ? "CV match: Not calculated"
-        : `CV match: ${result.match_percentage}% ` + `(${result.match_level})`;
+        : `CV match: ${result.match_percentage}% — ${result.match_level}`;
 
-    const companyMessage =
-      result.company_status === "Approved"
-        ? `${result.matched_company_name} ` + `(Tier ${result.company_tier})`
-        : result.company_status;
+    let companyMessage = result.company_quality_decision || "Not evaluated";
+
+    if (
+      result.company_quality_decision &&
+      result.company_quality_decision !== "Manual review" &&
+      result.company_quality_score !== null &&
+      result.company_quality_score !== undefined
+    ) {
+      companyMessage += ` — ${result.company_quality_score}/100`;
+    }
 
     const roleMessage = result.role_ceiling_decision
-      ? `${result.role_ceiling_decision} ` +
-        `(${result.detected_role_level || "Unspecified"})`
+      ? `${result.role_ceiling_decision} — ` +
+        `${result.detected_role_level || "Unspecified"}`
       : "Not evaluated";
 
-    const potentialPayment =
-      result.decision === "Apply"
-        ? JOB_MATCH_CONFIG.paymentRates.Apply
-        : result.decision === "Tailor first"
-          ? JOB_MATCH_CONFIG.paymentRates.TailorFirst
-          : JOB_MATCH_CONFIG.paymentRates.Skip;
+    const confidenceMessage = result.company_confidence
+      ? `Company confidence: ${result.company_confidence}`
+      : "Company confidence: Not calculated";
 
     ui.alert(
       "Analysis complete",
       [
-        `Opportunity gate: ${result.screening_decision}`,
+        `Geography: ${result.geography_decision}`,
+        `Role: ${roleMessage}`,
         `Company: ${companyMessage}`,
-        `Role ceiling: ${roleMessage}`,
+        confidenceMessage,
         scoreMessage,
         `Decision: ${result.decision}`,
-        `Potential payment rate: ₦${potentialPayment}`,
       ].join("\n"),
       ui.ButtonSet.OK,
     );

@@ -67,47 +67,22 @@ function jmValidateApiResponse_(result) {
 
   const requiredFields = [
     "job_accepted",
-    "screening_decision",
-    "screening_reasons",
-    "company_status",
-    "salary_status",
-    "job_quality_level",
+    "geography_decision",
+    "geography_reason",
     "decision",
   ];
 
-  requiredFields.forEach(function (field) {
-    if (!Object.prototype.hasOwnProperty.call(result, field)) {
-      throw new Error(`API response is missing "${field}".`);
-    }
-  });
-
-  if (!Array.isArray(result.screening_reasons)) {
-    throw new Error('API field "screening_reasons" must be a list.');
-  }
+  jmRequireFields_(result, requiredFields);
 
   jmRequireAllowedValue_(
-    result.screening_decision,
+    result.geography_decision,
     ["Accepted", "Rejected", "Manual review"],
-    "screening_decision",
+    "geography_decision",
   );
 
-  jmRequireAllowedValue_(
-    result.company_status,
-    ["Approved", "Not approved", "Unknown"],
-    "company_status",
-  );
-
-  jmRequireAllowedValue_(
-    result.salary_status,
-    ["High-paying", "Not high-paying", "Unknown"],
-    "salary_status",
-  );
-
-  jmRequireAllowedValue_(
-    result.job_quality_level,
-    ["High-end", "Not high-end", "Unknown"],
-    "job_quality_level",
-  );
+  if (!String(result.geography_reason || "").trim()) {
+    throw new Error('API field "geography_reason" must not be empty.');
+  }
 
   jmRequireAllowedValue_(
     result.decision,
@@ -115,52 +90,23 @@ function jmValidateApiResponse_(result) {
     "decision",
   );
 
-  /*
-   * Approved companies must identify the matched
-   * company and its approved tier.
-   */
-  if (result.company_status === "Approved") {
-    if (!String(result.matched_company_name || "").trim()) {
-      throw new Error(
-        "Approved company response is missing " + '"matched_company_name".',
-      );
-    }
-
-    jmRequireAllowedValue_(result.company_tier, ["A", "B"], "company_tier");
-  }
-
-  if (
-    result.monthly_salary_ngn !== null &&
-    result.monthly_salary_ngn !== undefined
-  ) {
-    const monthlySalary = Number(result.monthly_salary_ngn);
-
-    if (!Number.isFinite(monthlySalary) || monthlySalary < 0) {
-      throw new Error("API returned an invalid monthly salary.");
-    }
-  }
-
-  /*
-   * A failed company/salary gate does not reach the
-   * role ceiling or CV-match stage.
-   */
-  if (result.screening_decision !== "Accepted") {
-    if (result.job_accepted !== false) {
-      throw new Error(
-        "A rejected or manual-review opportunity " +
-          "cannot have job_accepted=true.",
-      );
-    }
-
-    if (result.decision !== "Skip") {
-      throw new Error(
-        "A job that fails the opportunity gate " +
-          "must return Decision = Skip.",
-      );
-    }
-
-    jmValidateNoMatchResult_(result, "opportunity gate");
-
+  if (result.geography_decision !== "Accepted") {
+    jmRequireUnevaluatedFields_(
+      result,
+      [
+        "role_ceiling_decision",
+        "detected_role_level",
+        "role_ceiling_reasons",
+        "minimum_required_experience_years",
+        "maximum_required_experience_years",
+        "company_quality_decision",
+        "company_quality_score",
+        "company_quality_reasons",
+        "company_sources",
+      ],
+      "geography check",
+    );
+    jmValidateStoppedResult_(result, "geography check");
     return;
   }
 
@@ -170,11 +116,7 @@ function jmValidateApiResponse_(result) {
     "role_ceiling_reasons",
   ];
 
-  roleFields.forEach(function (field) {
-    if (!Object.prototype.hasOwnProperty.call(result, field)) {
-      throw new Error(`API response is missing "${field}".`);
-    }
-  });
+  jmRequireFields_(result, roleFields);
 
   if (!Array.isArray(result.role_ceiling_reasons)) {
     throw new Error('API field "role_ceiling_reasons" ' + "must be a list.");
@@ -201,33 +143,131 @@ function jmValidateApiResponse_(result) {
     "detected_role_level",
   );
 
-  /*
-   * A role-ceiling failure must stop before CV matching.
-   */
   if (result.role_ceiling_decision !== "Accepted") {
-    if (result.job_accepted !== false) {
-      throw new Error(
-        "A rejected or manual-review role cannot " + "have job_accepted=true.",
-      );
-    }
-
-    if (result.decision !== "Skip") {
-      throw new Error(
-        "A role that fails the role ceiling " + "must return Decision = Skip.",
-      );
-    }
-
-    jmValidateNoMatchResult_(result, "role ceiling");
-
+    jmRequireUnevaluatedFields_(
+      result,
+      [
+        "company_quality_decision",
+        "company_quality_score",
+        "company_scale_score",
+        "company_market_position_score",
+        "company_geographic_reach_score",
+        "company_engineering_maturity_score",
+        "company_reputation_score",
+        "company_confidence",
+        "company_quality_reasons",
+        "company_sources",
+      ],
+      "role ceiling",
+    );
+    jmValidateStoppedResult_(result, "role ceiling");
     return;
   }
 
-  /*
-   * Both gates passed, so CV matching must exist.
-   */
+  const companyFields = [
+    "company_quality_decision",
+    "company_quality_score",
+    "company_scale_score",
+    "company_market_position_score",
+    "company_geographic_reach_score",
+    "company_engineering_maturity_score",
+    "company_reputation_score",
+    "company_confidence",
+    "company_quality_reasons",
+    "company_sources",
+  ];
+
+  jmRequireFields_(result, companyFields);
+
+  jmRequireAllowedValue_(
+    result.company_quality_decision,
+    ["Accepted", "Rejected", "Manual review"],
+    "company_quality_decision",
+  );
+
+  jmRequireAllowedValue_(
+    result.company_confidence,
+    ["High", "Medium", "Low"],
+    "company_confidence",
+  );
+
+  jmRequireNumberInRange_(
+    result.company_quality_score,
+    0,
+    100,
+    "company_quality_score",
+  );
+  jmRequireNumberInRange_(
+    result.company_scale_score,
+    0,
+    30,
+    "company_scale_score",
+  );
+  jmRequireNumberInRange_(
+    result.company_market_position_score,
+    0,
+    25,
+    "company_market_position_score",
+  );
+  jmRequireNumberInRange_(
+    result.company_geographic_reach_score,
+    0,
+    15,
+    "company_geographic_reach_score",
+  );
+  jmRequireNumberInRange_(
+    result.company_engineering_maturity_score,
+    0,
+    20,
+    "company_engineering_maturity_score",
+  );
+  jmRequireNumberInRange_(
+    result.company_reputation_score,
+    0,
+    10,
+    "company_reputation_score",
+  );
+
+  if (!Array.isArray(result.company_quality_reasons)) {
+    throw new Error('API field "company_quality_reasons" must be a list.');
+  }
+
+  if (result.company_quality_reasons.length === 0) {
+    throw new Error('API field "company_quality_reasons" must not be empty.');
+  }
+
+  if (!Array.isArray(result.company_sources)) {
+    throw new Error('API field "company_sources" must be a list.');
+  }
+
+  if (result.company_quality_decision !== "Accepted") {
+    jmValidateStoppedResult_(result, "company quality gate");
+    return;
+  }
+
+  if (["High", "Medium"].indexOf(result.company_confidence) === -1) {
+    throw new Error("Accepted company must have High or Medium confidence.");
+  }
+
+  const uniqueSources = {};
+
+  result.company_sources.forEach(function (source) {
+    const url = String(source || "").trim();
+
+    if (!/^https?:\/\//i.test(url)) {
+      throw new Error(`API returned an invalid company source URL: ${url}`);
+    }
+
+    uniqueSources[url] = true;
+  });
+
+  if (Object.keys(uniqueSources).length < 2) {
+    throw new Error("Accepted company must include at least two source URLs.");
+  }
+
   if (result.job_accepted !== true) {
     throw new Error(
-      "An accepted opportunity and role must have " + "job_accepted=true.",
+      "An accepted geography, role and company must have job_accepted=true.",
     );
   }
 
@@ -265,21 +305,71 @@ function jmValidateApiResponse_(result) {
   }
 }
 
-function jmValidateNoMatchResult_(result, stoppedAt) {
-  const hasMatchPercentage =
-    result.match_percentage !== null &&
-    result.match_percentage !== undefined &&
-    result.match_percentage !== "";
+function jmValidateStoppedResult_(result, stoppedAt) {
+  if (result.job_accepted !== false) {
+    throw new Error(`A job stopped at the ${stoppedAt} cannot be accepted.`);
+  }
 
-  const hasMatchLevel =
-    result.match_level !== null &&
-    result.match_level !== undefined &&
-    result.match_level !== "";
+  if (result.decision !== "Skip") {
+    throw new Error(`A job stopped at the ${stoppedAt} must return Skip.`);
+  }
 
-  if (hasMatchPercentage || hasMatchLevel) {
+  jmRequireFields_(result, ["match_percentage", "match_level"]);
+
+  if (result.match_percentage !== null || result.match_level !== null) {
     throw new Error(
       `API returned CV-match data even though ` +
         `processing stopped at the ${stoppedAt}.`,
+    );
+  }
+}
+
+function jmRequireUnevaluatedFields_(result, fields, stoppedAt) {
+  fields.forEach(function (field) {
+    if (!Object.prototype.hasOwnProperty.call(result, field)) {
+      return;
+    }
+
+    const value = result[field];
+    const isEmptyArray = Array.isArray(value) && value.length === 0;
+
+    if (
+      value !== null &&
+      value !== undefined &&
+      value !== "" &&
+      !isEmptyArray
+    ) {
+      throw new Error(
+        `API returned "${field}" even though processing stopped ` +
+          `at the ${stoppedAt}.`,
+      );
+    }
+  });
+}
+
+function jmRequireFields_(value, fields) {
+  fields.forEach(function (field) {
+    if (!Object.prototype.hasOwnProperty.call(value, field)) {
+      throw new Error(`API response is missing "${field}".`);
+    }
+  });
+}
+
+function jmRequireNumberInRange_(value, minimum, maximum, fieldName) {
+  if (value === null || value === undefined || value === "") {
+    throw new Error(`API response is missing numeric "${fieldName}".`);
+  }
+
+  const numberValue = Number(value);
+
+  if (
+    !Number.isFinite(numberValue) ||
+    numberValue < minimum ||
+    numberValue > maximum
+  ) {
+    throw new Error(
+      `API returned invalid "${fieldName}": ${value}. ` +
+        `Expected ${minimum}–${maximum}.`,
     );
   }
 }
