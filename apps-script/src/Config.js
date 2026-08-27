@@ -30,20 +30,25 @@ const JOB_MATCH_TRACKER_COLUMNS = Object.freeze([
   "Duplicate Reason",
   "Analysis Status",
 
-  "Screening Decision",
-  "Screening Reasons",
-  "Company Status",
-  "Matched Company Name",
-  "Company Tier",
-  "Monthly Salary (NGN)",
-  "Salary Status",
-  "Job Quality Level",
+  "Geography Decision",
+  "Geography Reason",
 
   "Role Ceiling Decision",
   "Detected Role Level",
   "Role Ceiling Reasons",
   "Minimum Experience Years",
   "Maximum Experience Years",
+
+  "Company Quality Decision",
+  "Company Quality Score",
+  "Company Scale Score",
+  "Company Market Position Score",
+  "Company Geographic Reach Score",
+  "Company Engineering Maturity Score",
+  "Company Reputation Score",
+  "Company Confidence",
+  "Company Quality Reasons",
+  "Company Sources",
 
   "Match %",
   "Match Level",
@@ -62,7 +67,7 @@ const JOB_MATCH_TRACKER_COLUMNS = Object.freeze([
 ]);
 
 const JOB_MATCH_CONFIG = Object.freeze({
-  workbookVersion: "3.0.0",
+  workbookVersion: "4.0.0",
 
   trackerSheetName: "Sheet1",
   paymentSheetName: "Payment Summary",
@@ -81,26 +86,8 @@ const JOB_MATCH_CONFIG = Object.freeze({
 
   apiKeyHeaderName: "x-api-key",
 
-  opportunityGate: Object.freeze({
-    minimumMonthlySalaryNgn: 500000,
-    approvedCompanyTiers: Object.freeze(["A", "B"]),
-  }),
-
   roleCeiling: Object.freeze({
-    maximumAcceptedExperienceYears: 4,
-
-    acceptedLevels: Object.freeze([
-      "Internship",
-      "Graduate",
-      "Entry-level",
-      "Junior",
-      "Mid-level",
-      "Unspecified",
-    ]),
-
-    manualReviewLevels: Object.freeze(["Senior"]),
-
-    rejectedLevels: Object.freeze(["Leadership"]),
+    maximumAcceptedExperienceYears: 5,
   }),
 
   thresholds: Object.freeze({
@@ -111,7 +98,7 @@ const JOB_MATCH_CONFIG = Object.freeze({
 
   paymentRates: Object.freeze({
     Apply: 200,
-    TailorFirst: 250,
+    TailorFirst: 200,
     Skip: 0,
   }),
 
@@ -166,22 +153,25 @@ const JOB_MATCH_CONFIG = Object.freeze({
   }),
 
   outputHeaders: Object.freeze({
-    screeningDecision: "Screening Decision",
-    screeningReasons: "Screening Reasons",
-
-    companyStatus: "Company Status",
-    matchedCompanyName: "Matched Company Name",
-    companyTier: "Company Tier",
-    monthlySalaryNgn: "Monthly Salary (NGN)",
-
-    salaryStatus: "Salary Status",
-    jobQualityLevel: "Job Quality Level",
+    geographyDecision: "Geography Decision",
+    geographyReason: "Geography Reason",
 
     roleCeilingDecision: "Role Ceiling Decision",
     detectedRoleLevel: "Detected Role Level",
     roleCeilingReasons: "Role Ceiling Reasons",
     minimumExperienceYears: "Minimum Experience Years",
     maximumExperienceYears: "Maximum Experience Years",
+
+    companyQualityDecision: "Company Quality Decision",
+    companyQualityScore: "Company Quality Score",
+    companyScaleScore: "Company Scale Score",
+    companyMarketPositionScore: "Company Market Position Score",
+    companyGeographicReachScore: "Company Geographic Reach Score",
+    companyEngineeringMaturityScore: "Company Engineering Maturity Score",
+    companyReputationScore: "Company Reputation Score",
+    companyConfidence: "Company Confidence",
+    companyQualityReasons: "Company Quality Reasons",
+    companySources: "Company Sources",
 
     matchPercentage: "Match %",
     matchLevel: "Match Level",
@@ -253,23 +243,11 @@ const JOB_MATCH_CONFIG = Object.freeze({
       "Analyzing...",
     ]),
 
-    "Screening Decision": Object.freeze([
+    "Geography Decision": Object.freeze([
       "Accepted",
       "Rejected",
       "Manual review",
     ]),
-
-    "Company Status": Object.freeze(["Approved", "Not approved", "Unknown"]),
-
-    "Company Tier": Object.freeze(["A", "B"]),
-
-    "Salary Status": Object.freeze([
-      "High-paying",
-      "Not high-paying",
-      "Unknown",
-    ]),
-
-    "Job Quality Level": Object.freeze(["High-end", "Not high-end", "Unknown"]),
 
     "Role Ceiling Decision": Object.freeze([
       "Accepted",
@@ -287,6 +265,14 @@ const JOB_MATCH_CONFIG = Object.freeze({
       "Leadership",
       "Unspecified",
     ]),
+
+    "Company Quality Decision": Object.freeze([
+      "Accepted",
+      "Rejected",
+      "Manual review",
+    ]),
+
+    "Company Confidence": Object.freeze(["High", "Medium", "Low"]),
 
     "Match Level": Object.freeze(["Strong", "Medium", "Weak"]),
 

@@ -63,22 +63,25 @@ function jmClearAnalysisResult_(sheet, selectedRow) {
   const outputHeaders = JOB_MATCH_CONFIG.outputHeaders;
 
   const headersToClear = [
-    outputHeaders.screeningDecision,
-    outputHeaders.screeningReasons,
-
-    outputHeaders.companyStatus,
-    outputHeaders.matchedCompanyName,
-    outputHeaders.companyTier,
-    outputHeaders.monthlySalaryNgn,
-
-    outputHeaders.salaryStatus,
-    outputHeaders.jobQualityLevel,
+    outputHeaders.geographyDecision,
+    outputHeaders.geographyReason,
 
     outputHeaders.roleCeilingDecision,
     outputHeaders.detectedRoleLevel,
     outputHeaders.roleCeilingReasons,
     outputHeaders.minimumExperienceYears,
     outputHeaders.maximumExperienceYears,
+
+    outputHeaders.companyQualityDecision,
+    outputHeaders.companyQualityScore,
+    outputHeaders.companyScaleScore,
+    outputHeaders.companyMarketPositionScore,
+    outputHeaders.companyGeographicReachScore,
+    outputHeaders.companyEngineeringMaturityScore,
+    outputHeaders.companyReputationScore,
+    outputHeaders.companyConfidence,
+    outputHeaders.companyQualityReasons,
+    outputHeaders.companySources,
 
     outputHeaders.matchPercentage,
     outputHeaders.matchLevel,
@@ -104,29 +107,10 @@ function jmWriteApiResult_(sheet, selectedRow, result) {
 
   const valuesByHeader = {};
 
-  valuesByHeader[outputHeaders.screeningDecision] =
-    result.screening_decision || "";
+  valuesByHeader[outputHeaders.geographyDecision] =
+    result.geography_decision || "";
 
-  valuesByHeader[outputHeaders.screeningReasons] = jmJoinList_(
-    result.screening_reasons,
-    "\n",
-  );
-
-  valuesByHeader[outputHeaders.companyStatus] = result.company_status || "";
-
-  valuesByHeader[outputHeaders.matchedCompanyName] =
-    result.matched_company_name || "";
-
-  valuesByHeader[outputHeaders.companyTier] = result.company_tier || "";
-
-  valuesByHeader[outputHeaders.monthlySalaryNgn] = jmOptionalNumber_(
-    result.monthly_salary_ngn,
-  );
-
-  valuesByHeader[outputHeaders.salaryStatus] = result.salary_status || "";
-
-  valuesByHeader[outputHeaders.jobQualityLevel] =
-    result.job_quality_level || "";
+  valuesByHeader[outputHeaders.geographyReason] = result.geography_reason || "";
 
   valuesByHeader[outputHeaders.roleCeilingDecision] =
     result.role_ceiling_decision || "";
@@ -145,6 +129,45 @@ function jmWriteApiResult_(sheet, selectedRow, result) {
 
   valuesByHeader[outputHeaders.maximumExperienceYears] = jmOptionalNumber_(
     result.maximum_required_experience_years,
+  );
+
+  valuesByHeader[outputHeaders.companyQualityDecision] =
+    result.company_quality_decision || "";
+
+  valuesByHeader[outputHeaders.companyQualityScore] = jmOptionalNumber_(
+    result.company_quality_score,
+  );
+
+  valuesByHeader[outputHeaders.companyScaleScore] = jmOptionalNumber_(
+    result.company_scale_score,
+  );
+
+  valuesByHeader[outputHeaders.companyMarketPositionScore] = jmOptionalNumber_(
+    result.company_market_position_score,
+  );
+
+  valuesByHeader[outputHeaders.companyGeographicReachScore] = jmOptionalNumber_(
+    result.company_geographic_reach_score,
+  );
+
+  valuesByHeader[outputHeaders.companyEngineeringMaturityScore] =
+    jmOptionalNumber_(result.company_engineering_maturity_score);
+
+  valuesByHeader[outputHeaders.companyReputationScore] = jmOptionalNumber_(
+    result.company_reputation_score,
+  );
+
+  valuesByHeader[outputHeaders.companyConfidence] =
+    result.company_confidence || "";
+
+  valuesByHeader[outputHeaders.companyQualityReasons] = jmJoinList_(
+    result.company_quality_reasons,
+    "\n",
+  );
+
+  valuesByHeader[outputHeaders.companySources] = jmJoinList_(
+    result.company_sources,
+    "\n",
   );
 
   valuesByHeader[outputHeaders.matchPercentage] = jmOptionalNumber_(
@@ -180,8 +203,10 @@ function jmWriteApiResult_(sheet, selectedRow, result) {
   });
 
   const wrappedHeaders = [
-    outputHeaders.screeningReasons,
+    outputHeaders.geographyReason,
     outputHeaders.roleCeilingReasons,
+    outputHeaders.companyQualityReasons,
+    outputHeaders.companySources,
     outputHeaders.matchedSkills,
     outputHeaders.missingSkills,
     outputHeaders.tailoringAdvice,
@@ -192,6 +217,17 @@ function jmWriteApiResult_(sheet, selectedRow, result) {
 
     sheet.getRange(selectedRow, columnIndex + 1).setWrap(true);
   });
+
+  const sourcesColumn = jmFindRequiredColumn_(
+    headerMap,
+    [outputHeaders.companySources],
+    outputHeaders.companySources,
+  );
+
+  jmWriteLinkedUrlList_(
+    sheet.getRange(selectedRow, sourcesColumn + 1),
+    result.company_sources,
+  );
 }
 
 function jmWriteAnalysisStatus_(sheet, selectedRow, status) {
@@ -219,6 +255,34 @@ function jmJoinList_(value, separator) {
       return Boolean(item);
     })
     .join(separator);
+}
+
+function jmWriteLinkedUrlList_(range, value) {
+  const urls = Array.isArray(value)
+    ? value
+        .map(function (item) {
+          return String(item || "").trim();
+        })
+        .filter(function (item) {
+          return /^https?:\/\//i.test(item);
+        })
+    : [];
+
+  if (urls.length === 0) {
+    range.clearContent();
+    return;
+  }
+
+  const text = urls.join("\n");
+  const builder = SpreadsheetApp.newRichTextValue().setText(text);
+  let offset = 0;
+
+  urls.forEach(function (url) {
+    builder.setLinkUrl(offset, offset + url.length, url);
+    offset += url.length + 1;
+  });
+
+  range.setRichTextValue(builder.build()).setWrap(true);
 }
 
 function jmBuildHeaderMap_(sheet) {

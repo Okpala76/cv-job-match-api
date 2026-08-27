@@ -126,8 +126,14 @@ def test_eligible_job_reaches_cv_matching_and_python_thresholds(monkeypatch) -> 
     assert response.status_code == 200
     result = response.json()
     assert result["job_accepted"] is True
-    assert result["company_status"] == "Unknown"
-    assert result["salary_status"] == "Unknown"
+    for legacy_field in (
+        "company_status",
+        "matched_company_name",
+        "company_tier",
+        "salary_status",
+        "job_quality_level",
+    ):
+        assert legacy_field not in result
     assert result["company_quality_decision"] == "Accepted"
     assert result["match_level"] == "Medium"
     assert result["decision"] == "Tailor first"

@@ -92,13 +92,71 @@ function setupTrackerSheet_(sheet) {
     JOB_MATCH_CONFIG.trackerColumns.length,
   );
 
+  setupMarkLegacyTrackerHeaders_(sheet);
   setupEnsureTrackerHeaders_(sheet);
+  setupReorderTrackerColumns_(sheet);
 
   setupApplyTrackerFormatting_(sheet);
   setupApplyTrackerValidations_(sheet);
   setupApplyTrackerFormulas_(sheet);
   setupApplyTrackerConditionalFormatting_(sheet);
   setupApplyTrackerFilter_(sheet);
+}
+
+function setupReorderTrackerColumns_(sheet) {
+  JOB_MATCH_CONFIG.trackerColumns.forEach(function (header, index) {
+    const targetColumn = index + 1;
+    const headerMap = setupBuildHeaderMap_(sheet);
+    const currentColumn = headerMap[setupNormalizeHeader_(header)];
+
+    if (!currentColumn) {
+      throw new Error(`Required tracker column missing: ${header}`);
+    }
+
+    if (currentColumn !== targetColumn) {
+      sheet.moveColumns(
+        sheet.getRange(1, currentColumn, sheet.getMaxRows(), 1),
+        targetColumn,
+      );
+    }
+  });
+}
+
+function setupMarkLegacyTrackerHeaders_(sheet) {
+  const lastColumn = sheet.getLastColumn();
+
+  if (lastColumn < 1) {
+    return;
+  }
+
+  const range = sheet.getRange(JOB_MATCH_CONFIG.headerRow, 1, 1, lastColumn);
+  const headers = range.getDisplayValues()[0];
+  const legacyHeaders = {
+    "screening decision": "Legacy - Screening Decision",
+    "screening reasons": "Legacy - Screening Reasons",
+    "company status": "Legacy - Company Status",
+    "matched company name": "Legacy - Matched Company Name",
+    "company tier": "Legacy - Company Tier",
+    "monthly salary (ngn)": "Legacy - Monthly Salary (NGN)",
+    "salary status": "Legacy - Salary Status",
+    "job quality level": "Legacy - Job Quality Level",
+  };
+  let changed = false;
+
+  const migratedHeaders = headers.map(function (header) {
+    const replacement = legacyHeaders[setupNormalizeHeader_(header)];
+
+    if (replacement) {
+      changed = true;
+      return replacement;
+    }
+
+    return header;
+  });
+
+  if (changed) {
+    range.setValues([migratedHeaders]);
+  }
 }
 
 function setupEnsureTrackerHeaders_(sheet) {
@@ -209,11 +267,7 @@ function setupApplyTrackerFormatting_(sheet) {
       .setNumberFormat("dd-mmm-yyyy");
   });
 
-  const currencyHeaders = [
-    "Monthly Salary (NGN)",
-    "Payment Rate",
-    "Payment Due",
-  ];
+  const currencyHeaders = ["Payment Rate", "Payment Due"];
 
   currencyHeaders.forEach(function (header) {
     const column = headerMap[setupNormalizeHeader_(header)];
@@ -232,10 +286,36 @@ function setupApplyTrackerFormatting_(sheet) {
       .setNumberFormat("₦#,##0");
   });
 
+  const scoreHeaders = [
+    "Company Quality Score",
+    "Company Scale Score",
+    "Company Market Position Score",
+    "Company Geographic Reach Score",
+    "Company Engineering Maturity Score",
+    "Company Reputation Score",
+  ];
+
+  scoreHeaders.forEach(function (header) {
+    const column = headerMap[setupNormalizeHeader_(header)];
+
+    if (column) {
+      sheet
+        .getRange(
+          JOB_MATCH_CONFIG.dataStartRow,
+          column,
+          JOB_MATCH_CONFIG.formulaEndRow - JOB_MATCH_CONFIG.dataStartRow + 1,
+          1,
+        )
+        .setNumberFormat("0");
+    }
+  });
+
   const wrappedHeaders = [
     "Job Description",
-    "Screening Reasons",
+    "Geography Reason",
     "Role Ceiling Reasons",
+    "Company Quality Reasons",
+    "Company Sources",
     "Matched Skills",
     "Missing Skills",
     "Tailoring Advice",
@@ -283,19 +363,23 @@ function setupApplyTrackerFormatting_(sheet) {
     "Duplicate Row": 95,
     "Duplicate Reason": 260,
     "Analysis Status": 175,
-    "Screening Decision": 135,
-    "Screening Reasons": 280,
-    "Company Status": 120,
-    "Matched Company Name": 190,
-    "Company Tier": 90,
-    "Monthly Salary (NGN)": 145,
-    "Salary Status": 125,
-    "Job Quality Level": 130,
+    "Geography Decision": 135,
+    "Geography Reason": 280,
     "Role Ceiling Decision": 150,
     "Detected Role Level": 130,
     "Role Ceiling Reasons": 280,
     "Minimum Experience Years": 140,
     "Maximum Experience Years": 140,
+    "Company Quality Decision": 155,
+    "Company Quality Score": 125,
+    "Company Scale Score": 115,
+    "Company Market Position Score": 155,
+    "Company Geographic Reach Score": 165,
+    "Company Engineering Maturity Score": 175,
+    "Company Reputation Score": 135,
+    "Company Confidence": 125,
+    "Company Quality Reasons": 320,
+    "Company Sources": 320,
     "Match %": 80,
     "Match Level": 100,
     "Matched Skills": 230,
@@ -347,23 +431,21 @@ function setupApplyTrackerValidations_(sheet) {
 
 function setupApplyTrackerFormulas_(sheet) {
   const headerMap = setupBuildHeaderMap_(sheet);
-
   const rowStart = JOB_MATCH_CONFIG.dataStartRow;
-
   const rowEnd = JOB_MATCH_CONFIG.formulaEndRow;
-
   const rowCount = rowEnd - rowStart + 1;
-
   const required = [
     "S/N",
     "Company Name",
     "Salary / Compensation",
     "Application Status",
+    "Date of Application",
     "Submission Proof Link",
     "Duplicate Status",
     "Analysis Status",
-    "Screening Decision",
+    "Geography Decision",
     "Role Ceiling Decision",
+    "Company Quality Decision",
     "Decision",
     "Tailoring Completed?",
     "Quality Review",
@@ -380,77 +462,53 @@ function setupApplyTrackerFormulas_(sheet) {
   });
 
   const snColumn = headerMap[setupNormalizeHeader_("S/N")];
-
   const companyColumn = headerMap[setupNormalizeHeader_("Company Name")];
-
   const salaryTextColumn =
     headerMap[setupNormalizeHeader_("Salary / Compensation")];
-
   const applicationStatusColumn =
     headerMap[setupNormalizeHeader_("Application Status")];
-
+  const applicationDateColumn =
+    headerMap[setupNormalizeHeader_("Date of Application")];
   const submissionProofColumn =
     headerMap[setupNormalizeHeader_("Submission Proof Link")];
-
   const duplicateStatusColumn =
     headerMap[setupNormalizeHeader_("Duplicate Status")];
-
   const analysisStatusColumn =
     headerMap[setupNormalizeHeader_("Analysis Status")];
-
-  const screeningDecisionColumn =
-    headerMap[setupNormalizeHeader_("Screening Decision")];
-
+  const geographyDecisionColumn =
+    headerMap[setupNormalizeHeader_("Geography Decision")];
   const roleCeilingColumn =
     headerMap[setupNormalizeHeader_("Role Ceiling Decision")];
-
+  const companyQualityColumn =
+    headerMap[setupNormalizeHeader_("Company Quality Decision")];
   const decisionColumn = headerMap[setupNormalizeHeader_("Decision")];
-
   const tailoringCompletedColumn =
     headerMap[setupNormalizeHeader_("Tailoring Completed?")];
-
   const qualityReviewColumn =
     headerMap[setupNormalizeHeader_("Quality Review")];
-
   const paymentRateColumn = headerMap[setupNormalizeHeader_("Payment Rate")];
-
   const paymentEligibilityColumn =
     headerMap[setupNormalizeHeader_("Payment Eligibility")];
-
   const paymentDueColumn = headerMap[setupNormalizeHeader_("Payment Due")];
-
   const paymentReasonColumn =
     headerMap[setupNormalizeHeader_("Payment Eligibility Reason")];
-
   const companyLetter = setupColumnLetter_(companyColumn);
-
   const salaryTextLetter = setupColumnLetter_(salaryTextColumn);
-
   const applicationStatusLetter = setupColumnLetter_(applicationStatusColumn);
-
+  const applicationDateLetter = setupColumnLetter_(applicationDateColumn);
   const submissionProofLetter = setupColumnLetter_(submissionProofColumn);
-
   const duplicateStatusLetter = setupColumnLetter_(duplicateStatusColumn);
-
   const analysisStatusLetter = setupColumnLetter_(analysisStatusColumn);
-
-  const screeningDecisionLetter = setupColumnLetter_(screeningDecisionColumn);
-
+  const geographyDecisionLetter = setupColumnLetter_(geographyDecisionColumn);
   const roleCeilingLetter = setupColumnLetter_(roleCeilingColumn);
-
+  const companyQualityLetter = setupColumnLetter_(companyQualityColumn);
   const decisionLetter = setupColumnLetter_(decisionColumn);
-
   const tailoringCompletedLetter = setupColumnLetter_(tailoringCompletedColumn);
-
   const qualityReviewLetter = setupColumnLetter_(qualityReviewColumn);
-
   const paymentRateLetter = setupColumnLetter_(paymentRateColumn);
-
   const paymentEligibilityLetter = setupColumnLetter_(paymentEligibilityColumn);
-
   const submittedStatusPattern =
     JOB_MATCH_CONFIG.submittedApplicationStatuses.join("|");
-
   const snFormulas = [];
   const paymentRateFormulas = [];
   const paymentEligibilityFormulas = [];
@@ -465,59 +523,35 @@ function setupApplyTrackerFormulas_(sheet) {
     ]);
 
     paymentRateFormulas.push([
-      `=IF($${decisionLetter}${row}="Apply",` +
-        `${JOB_MATCH_CONFIG.paymentRates.Apply},` +
-        `IF($${decisionLetter}${row}="Tailor first",` +
-        `${JOB_MATCH_CONFIG.paymentRates.TailorFirst},0))`,
+      `=IF(OR(` +
+        `$${decisionLetter}${row}="Apply",` +
+        `$${decisionLetter}${row}="Tailor first"` +
+        `),${JOB_MATCH_CONFIG.paymentRates.Apply},0)`,
     ]);
 
     paymentEligibilityFormulas.push([
-      `=IF(` +
+      `=IF(AND(` +
         `OR(` +
-        `$${decisionLetter}${row}="",` +
-        `$${decisionLetter}${row}="Skip"` +
+        `$${decisionLetter}${row}="Apply",` +
+        `$${decisionLetter}${row}="Tailor first"` +
         `),` +
-        `"Not eligible",` +
-        `IF(` +
-        `$${screeningDecisionLetter}${row}<>"Accepted",` +
-        `"Not eligible",` +
-        `IF(` +
-        `$${roleCeilingLetter}${row}<>"Accepted",` +
-        `"Not eligible",` +
-        `IF(` +
-        `$${duplicateStatusLetter}${row}<>"No duplicate found",` +
-        `"Not eligible",` +
-        `IF(` +
-        `$${analysisStatusLetter}${row}<>"Success",` +
-        `"Not eligible",` +
-        `IF(` +
-        `NOT(REGEXMATCH(` +
+        `$${duplicateStatusLetter}${row}="No duplicate found",` +
+        `$${geographyDecisionLetter}${row}="Accepted",` +
+        `$${roleCeilingLetter}${row}="Accepted",` +
+        `$${companyQualityLetter}${row}="Accepted",` +
+        `$${analysisStatusLetter}${row}="Success",` +
+        `$${applicationDateLetter}${row}<>"",` +
+        `REGEXMATCH(` +
         `$${applicationStatusLetter}${row},` +
         `"^(${submittedStatusPattern})$"` +
-        `)),` +
-        `"Not eligible",` +
-        `IF(` +
-        `$${submissionProofLetter}${row}="",` +
-        `"Not eligible",` +
-        `IF(` +
-        `$${qualityReviewLetter}${row}<>"Approved",` +
-        `"Not eligible",` +
-        `IF(` +
-        `AND(` +
-        `$${decisionLetter}${row}="Tailor first",` +
-        `$${tailoringCompletedLetter}${row}<>"Yes"` +
         `),` +
-        `"Not eligible",` +
-        `"Eligible"` +
-        `)` +
-        `)` +
-        `)` +
-        `)` +
-        `)` +
-        `)` +
-        `)` +
-        `)` +
-        `)`,
+        `OR(` +
+        `$${decisionLetter}${row}<>"Tailor first",` +
+        `$${tailoringCompletedLetter}${row}="Yes"` +
+        `),` +
+        `$${submissionProofLetter}${row}<>"",` +
+        `$${qualityReviewLetter}${row}="Approved"` +
+        `),"Eligible","Not eligible")`,
     ]);
 
     paymentDueFormulas.push([
@@ -528,53 +562,31 @@ function setupApplyTrackerFormulas_(sheet) {
     ]);
 
     paymentReasonFormulas.push([
-      `=IF(` +
-        `$${decisionLetter}${row}="",` +
-        `"Awaiting API decision",` +
-        `IF(` +
-        `$${decisionLetter}${row}="Skip",` +
-        `"API decision is Skip",` +
-        `IF(` +
-        `$${screeningDecisionLetter}${row}<>"Accepted",` +
-        `"Company/salary gate not accepted",` +
-        `IF(` +
-        `$${roleCeilingLetter}${row}<>"Accepted",` +
-        `"Role ceiling not accepted",` +
-        `IF(` +
+      `=IFS(` +
+        `$${decisionLetter}${row}="","Awaiting API decision",` +
+        `$${decisionLetter}${row}="Skip","API decision is Skip",` +
         `$${duplicateStatusLetter}${row}<>"No duplicate found",` +
         `"Duplicate check not clear",` +
-        `IF(` +
+        `$${geographyDecisionLetter}${row}<>"Accepted",` +
+        `"Geography not accepted",` +
+        `$${roleCeilingLetter}${row}<>"Accepted",` +
+        `"Role ceiling not accepted",` +
+        `$${companyQualityLetter}${row}<>"Accepted",` +
+        `"Company quality not accepted",` +
         `$${analysisStatusLetter}${row}<>"Success",` +
         `"Analysis not successful",` +
-        `IF(` +
+        `$${applicationDateLetter}${row}="","Application date missing",` +
         `NOT(REGEXMATCH(` +
-        `$${applicationStatusLetter}${row},` +
-        `"^(${submittedStatusPattern})$"` +
-        `)),` +
-        `"Application not submitted",` +
-        `IF(` +
-        `$${submissionProofLetter}${row}="",` +
-        `"Submission proof missing",` +
-        `IF(` +
+        `$${applicationStatusLetter}${row},"^(${submittedStatusPattern})$"` +
+        `)),"Application not submitted",` +
         `AND(` +
         `$${decisionLetter}${row}="Tailor first",` +
         `$${tailoringCompletedLetter}${row}<>"Yes"` +
-        `),` +
-        `"Tailoring not completed",` +
-        `IF(` +
+        `),"Tailoring not completed",` +
+        `$${submissionProofLetter}${row}="","Submission proof missing",` +
         `$${qualityReviewLetter}${row}<>"Approved",` +
         `"Quality review not approved",` +
-        `"Eligible for payment"` +
-        `)` +
-        `)` +
-        `)` +
-        `)` +
-        `)` +
-        `)` +
-        `)` +
-        `)` +
-        `)` +
-        `)`,
+        `TRUE,"Eligible for payment")`,
     ]);
   }
 
@@ -718,58 +730,106 @@ function setupSetupSheet_(sheet) {
       "Generated from the Clasp codebase.",
     ],
     [
-      "System flow",
-      "Stage 1",
+      "Workflow",
+      "1. Record job",
+      "Complete job details",
+      "Record the company, title, location, link, description and any disclosed salary.",
+    ],
+    [
+      "Workflow",
+      "2. Duplicate check",
       "Duplicate check",
       "Already-applied jobs stop before the API call.",
     ],
     [
-      "System flow",
-      "Stage 2",
-      "Approved company OR ₦500,000+ monthly",
-      "An approved Tier A/B company passes even where salary is not disclosed.",
+      "Workflow",
+      "3. Geography check",
+      "Africa eligibility",
+      "The role must be in Africa or explicitly remote for candidates in Africa.",
     ],
     [
-      "System flow",
-      "Stage 3",
-      "Role ceiling",
-      "Lower-level roles are allowed. Roles clearly above the candidate's level are blocked.",
+      "Workflow",
+      "4. Role floor / ceiling",
+      "Role and experience eligibility",
+      "Trainee and unpaid roles fail. Minimum required experience must be no more than five years.",
     ],
     [
-      "System flow",
-      "Stage 4",
-      "CV match",
-      "The API compares the accepted opportunity against the hardcoded CV.",
+      "Workflow",
+      "5. Company quality research",
+      "Public-evidence assessment",
+      "The API researches and scores company scale, position, reach, engineering maturity and reputation.",
     ],
     [
-      "Opportunity gate",
-      "Approved companies",
-      "Tier A or Tier B",
-      "Approved-company matching is performed locally by FastAPI.",
+      "Workflow",
+      "6. CV match",
+      "Apply, Tailor first or Skip",
+      "CV matching runs only after geography, role and company quality are accepted.",
     ],
     [
-      "Opportunity gate",
-      "Unknown company",
-      "Minimum ₦500,000 monthly",
-      "A clear guaranteed salary must meet the threshold.",
+      "Workflow",
+      "7. Tailor if required",
+      "Complete tailoring",
+      "Tailor-first jobs require a tailored CV before submission.",
     ],
     [
-      "Role ceiling",
-      "Accepted",
-      "0–4 years",
-      "Internship, graduate, entry, junior and mid-level roles may pass.",
+      "Workflow",
+      "8. Submit",
+      "Record application status and date",
+      "Only mark the application submitted after completion.",
     ],
     [
-      "Role ceiling",
-      "Manual review",
-      "Senior",
-      "Senior roles require manual confirmation.",
+      "Workflow",
+      "9. Add proof",
+      "Submission Proof Link",
+      "Add a screenshot, email or portal confirmation proving submission.",
     ],
     [
-      "Role ceiling",
-      "Rejected",
-      "5+ years or leadership",
-      "Staff, principal, architect, lead, manager, director and executive roles are blocked.",
+      "Workflow",
+      "10. Quality review",
+      "Approved or Rejected",
+      "The reviewer verifies the application and proof.",
+    ],
+    [
+      "Workflow",
+      "11. Payment",
+      "₦200 per eligible submitted application",
+      "Apply and Tailor-first both pay a flat ₦200 after every V2 eligibility and submission control passes.",
+    ],
+    [
+      "Geography",
+      "Target area",
+      "Africa",
+      "African roles and remote roles explicitly open to African candidates may proceed.",
+    ],
+    [
+      "Role floor",
+      "Do not apply",
+      "Trainee or unpaid roles",
+      "Internships, trainee programmes, apprenticeships, NYSC, volunteer and unpaid roles fail.",
+    ],
+    [
+      "Role floor",
+      "Graduate engineering exception",
+      "May proceed",
+      "Graduate Software Engineer, Graduate Developer and Graduate Engineer are not trainee programmes by title alone.",
+    ],
+    [
+      "Experience ceiling",
+      "Accepted range",
+      "0–5 years minimum required",
+      "Senior title alone is not a reason to reject.",
+    ],
+    [
+      "Experience ceiling",
+      "Rejected range",
+      "6+ years minimum required",
+      "Roles above the five-year minimum-experience ceiling must be skipped.",
+    ],
+    [
+      "Company quality",
+      "Authoritative decision",
+      "API public-evidence assessment",
+      "Do not manually decide that a company is big enough. Manual review must stop for reviewer input.",
     ],
     [
       "CV decision",
@@ -786,22 +846,16 @@ function setupSetupSheet_(sheet) {
     ["CV decision", "Skip", "0–69%", "Do not apply."],
     [
       "Payment",
-      "Apply rate",
-      "₦200",
-      "Potential rate set automatically from the API decision.",
-    ],
-    [
-      "Payment",
-      "Tailor-first rate",
-      "₦200",
-      "Payable only after tailoring is confirmed.",
+      "Apply and Tailor-first rate",
+      "₦200 per eligible submitted application",
+      "Tailor-first is payable only after tailoring is confirmed.",
     ],
     ["Payment", "Skip rate", "₦0", "Skipped jobs do not qualify for payment."],
     [
       "Payment",
       "Final eligibility",
       "All controls must pass",
-      "Submission, proof, quality approval, duplicate clearance and successful analysis are required.",
+      "Application date/status, proof, quality approval, duplicate clearance and all V2 gates are required.",
     ],
     [
       "Submission proof",
@@ -860,22 +914,16 @@ function setupConfigSheet_(sheet) {
       "Main application tracker.",
     ],
     [
-      "Minimum Monthly Salary",
-      JOB_MATCH_CONFIG.opportunityGate.minimumMonthlySalaryNgn,
-      "Config.js",
-      "Used only where the company is not approved.",
-    ],
-    [
-      "Approved Company Tiers",
-      JOB_MATCH_CONFIG.opportunityGate.approvedCompanyTiers.join(", "),
-      "Config.js",
-      "Tier A and Tier B both pass.",
-    ],
-    [
       "Maximum Accepted Experience",
       JOB_MATCH_CONFIG.roleCeiling.maximumAcceptedExperienceYears,
       "Config.js",
-      "Roles requiring 5+ years are rejected.",
+      "0–5 years may proceed; 6+ years are rejected.",
+    ],
+    [
+      "Company Quality Minimum",
+      70,
+      "FastAPI",
+      "Python also requires scale score 20+, sufficient confidence and at least two sources.",
     ],
     [
       "Apply Minimum",
@@ -897,19 +945,19 @@ function setupConfigSheet_(sheet) {
     ],
     [
       "Apply Payment",
-      JOB_MATCH_CONFIG.paymentRates.Apply,
+      `₦${JOB_MATCH_CONFIG.paymentRates.Apply}`,
       "Config.js",
-      "Potential payment rate.",
+      "Flat ₦200 per eligible submitted application.",
     ],
     [
       "Tailor-first Payment",
-      JOB_MATCH_CONFIG.paymentRates.TailorFirst,
+      `₦${JOB_MATCH_CONFIG.paymentRates.TailorFirst}`,
       "Config.js",
-      "Requires Tailoring Completed = Yes.",
+      "Flat ₦200 per eligible submitted application; requires Tailoring Completed = Yes.",
     ],
     [
       "Skip Payment",
-      JOB_MATCH_CONFIG.paymentRates.Skip,
+      `₦${JOB_MATCH_CONFIG.paymentRates.Skip}`,
       "Config.js",
       "Never payable.",
     ],
@@ -961,9 +1009,9 @@ function setupInstructionsSheet_(sheet) {
     ["STEP", "ACTION", "REQUIRED RESULT", "IMPORTANT NOTE"],
     [
       1,
-      "Record the opportunity",
-      "Fill Company Name, Job Title, Job Link and the full Job Description.",
-      "Add salary and level information whenever disclosed.",
+      "Record the job",
+      "Fill company, title, location, link and full job description.",
+      "Salary is informational only and never controls acceptance or payment.",
     ],
     [
       2,
@@ -979,58 +1027,57 @@ function setupInstructionsSheet_(sheet) {
     ],
     [
       4,
-      "Review the opportunity gate",
-      "Screening Decision should be Accepted.",
-      "Approved Tier A/B company or salary of at least ₦500,000 monthly is required.",
+      "Review geography",
+      "Geography Decision must be Accepted.",
+      "Target African countries or remote roles explicitly available to African candidates.",
     ],
     [
       5,
-      "Review the role ceiling",
+      "Review role eligibility",
       "Role Ceiling Decision should be Accepted.",
-      "Manual-review or rejected roles must not be submitted automatically.",
+      "Do not apply to internships, trainee programmes, apprenticeships, NYSC, volunteer or unpaid roles.",
     ],
     [
       6,
-      "Follow the API decision",
-      "Apply, Tailor first or Skip.",
-      "The assistant must not override the decision.",
+      "Apply the experience ceiling",
+      "0–5 years may proceed; 6+ minimum years are rejected.",
+      "Senior title alone is not a reason to reject.",
     ],
     [
       7,
-      "For Apply",
-      "Use the correct existing CV and complete the application.",
-      "Potential payment rate is automatically ₦300.",
+      "Recognise graduate engineering roles",
+      "Graduate Software Engineer, Developer or Engineer may qualify.",
+      "Do not confuse a real engineering role with a Graduate Trainee programme.",
     ],
     [
       8,
-      "For Tailor first",
-      "Tailor the CV before applying and set Tailoring Completed? to Yes.",
-      "Potential payment rate is automatically ₦250.",
+      "Review company quality",
+      "Company Quality Decision must be Accepted.",
+      "Never manually decide that a company is big enough; Manual review requires reviewer input.",
     ],
-    [9, "For Skip", "Do not submit the application.", "Payment is ₦0."],
+    [
+      9,
+      "Follow the CV decision",
+      "Apply, Tailor first or Skip.",
+      "90+ means Apply, 70–89 Tailor first, and below 70 Skip.",
+    ],
     [
       10,
-      "Record successful submission",
-      "Set Application Status to Applied or a later submitted status.",
-      "Do not mark an unfinished form as Applied.",
+      "Complete Tailor first",
+      "Tailor the CV and set Tailoring Completed? to Yes before submission.",
+      "Apply and Tailor first both pay ₦200 per eligible submitted application.",
     ],
     [
       11,
-      "Upload submission proof",
-      "Paste a Drive link, confirmation email reference or portal proof.",
-      "Proof should show the company/job and that submission succeeded.",
+      "Submit and add proof",
+      "Record Date of Application, submitted status and Submission Proof Link.",
+      "Do not mark an unfinished form as submitted.",
     ],
     [
       12,
-      "Quality review",
-      "Reviewer sets Quality Review to Approved or Rejected.",
-      "The applicant must not approve their own work.",
-    ],
-    [
-      13,
-      "Payment",
-      "Payment Eligibility becomes Eligible only after every requirement passes.",
-      "Payment Due remains ₦0 until the row is eligible.",
+      "Quality review and payment",
+      "Reviewer sets Quality Review; approved eligible rows receive ₦200 per submitted application.",
+      "Skip, Rejected and Manual-review rows receive NGN 0.",
     ],
   ];
 
@@ -1080,8 +1127,6 @@ function setupPaymentSummarySheet_(sheet, trackerSheet) {
     "Week Start",
     "Week End",
     "Eligible Applications",
-    "Apply Applications",
-    "Tailor-first Applications",
     "Total Payment Due",
     "Payment Status",
     "Date Paid",
@@ -1089,9 +1134,11 @@ function setupPaymentSummarySheet_(sheet, trackerSheet) {
   ];
 
   setupEnsureGridSize_(sheet, 200, headers.length);
+  setupMigratePaymentSummaryHeaders_(sheet);
 
+  const existingColumnCount = Math.max(sheet.getLastColumn(), 1);
   const existingHeaders = sheet
-    .getRange(1, 1, 1, headers.length)
+    .getRange(1, 1, 1, existingColumnCount)
     .getDisplayValues()[0];
 
   const isBlank = existingHeaders.every(function (value) {
@@ -1101,11 +1148,34 @@ function setupPaymentSummarySheet_(sheet, trackerSheet) {
   if (isBlank) {
     sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   } else {
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    const existingNormalized = {};
+
+    existingHeaders.forEach(function (header) {
+      existingNormalized[setupNormalizeHeader_(header)] = true;
+    });
+
+    const missingHeaders = headers.filter(function (header) {
+      return !existingNormalized[setupNormalizeHeader_(header)];
+    });
+
+    if (missingHeaders.length > 0) {
+      const firstNewColumn = existingColumnCount + 1;
+      setupEnsureGridSize_(
+        sheet,
+        200,
+        existingColumnCount + missingHeaders.length,
+      );
+      sheet
+        .getRange(1, firstNewColumn, 1, missingHeaders.length)
+        .setValues([missingHeaders]);
+    }
   }
 
+  const headerMap = setupBuildHeaderMap_(sheet);
+  const lastColumn = sheet.getLastColumn();
+
   sheet
-    .getRange(1, 1, 1, headers.length)
+    .getRange(1, 1, 1, lastColumn)
     .setFontWeight("bold")
     .setBackground("#1F4E78")
     .setFontColor("#FFFFFF")
@@ -1115,24 +1185,109 @@ function setupPaymentSummarySheet_(sheet, trackerSheet) {
   sheet.setFrozenRows(1);
   sheet.setRowHeight(1, 42);
 
-  const widths = [110, 110, 145, 130, 165, 145, 120, 110, 280];
+  const widths = {
+    "Week Start": 110,
+    "Week End": 110,
+    "Eligible Applications": 145,
+    "Total Payment Due": 145,
+    "Payment Status": 120,
+    "Date Paid": 110,
+    Notes: 280,
+  };
 
-  widths.forEach(function (width, index) {
-    sheet.setColumnWidth(index + 1, width);
+  Object.keys(widths).forEach(function (header) {
+    const column = headerMap[setupNormalizeHeader_(header)];
+
+    if (column) {
+      sheet.setColumnWidth(column, widths[header]);
+    }
   });
 
-  sheet.getRange(2, 1, 199, 2).setNumberFormat("dd-mmm-yyyy");
+  ["Week Start", "Week End", "Date Paid"].forEach(function (header) {
+    const column = headerMap[setupNormalizeHeader_(header)];
 
-  sheet.getRange(2, 6, 199, 1).setNumberFormat("₦#,##0");
+    if (column) {
+      sheet.getRange(2, column, 199, 1).setNumberFormat("dd-mmm-yyyy");
+    }
+  });
+
+  const totalPaymentColumn =
+    headerMap[setupNormalizeHeader_("Total Payment Due")];
+
+  sheet.getRange(2, totalPaymentColumn, 199, 1).setNumberFormat("₦#,##0");
 
   const statusValidation = SpreadsheetApp.newDataValidation()
     .requireValueInList(["Pending", "Paid"], true)
     .setAllowInvalid(false)
     .build();
 
-  sheet.getRange(2, 7, 199, 1).setDataValidation(statusValidation);
+  const paymentStatusColumn =
+    headerMap[setupNormalizeHeader_("Payment Status")];
+
+  sheet
+    .getRange(2, paymentStatusColumn, 199, 1)
+    .setDataValidation(statusValidation);
 
   setupAddPaymentWeekRow_(sheet, trackerSheet, setupGetCurrentWeekStart_());
+}
+
+function setupMigratePaymentSummaryHeaders_(sheet) {
+  const lastColumn = Math.max(sheet.getLastColumn(), 1);
+  const range = sheet.getRange(1, 1, 1, lastColumn);
+  const headers = range.getDisplayValues()[0];
+  const replacements = {
+    "valid applications": "Eligible Applications",
+    "payment due": "Total Payment Due",
+    "paid?": "Payment Status",
+  };
+  let changed = false;
+
+  const migratedHeaders = headers.map(function (header) {
+    const replacement = replacements[setupNormalizeHeader_(header)];
+
+    if (replacement) {
+      changed = true;
+      return replacement;
+    }
+
+    return header;
+  });
+
+  if (changed) {
+    range.setValues([migratedHeaders]);
+  }
+
+  const paymentStatusColumn = migratedHeaders.findIndex(function (header) {
+    return setupNormalizeHeader_(header) === "payment status";
+  });
+
+  if (paymentStatusColumn === -1 || sheet.getLastRow() < 2) {
+    return;
+  }
+
+  const statusRange = sheet.getRange(
+    2,
+    paymentStatusColumn + 1,
+    sheet.getLastRow() - 1,
+    1,
+  );
+  const statuses = statusRange.getDisplayValues().map(function (row) {
+    const value = String(row[0] || "")
+      .trim()
+      .toLowerCase();
+
+    if (value === "yes" || value === "paid") {
+      return ["Paid"];
+    }
+
+    if (value === "no" || value === "pending") {
+      return ["Pending"];
+    }
+
+    return [row[0]];
+  });
+
+  statusRange.setValues(statuses);
 }
 
 function setupAddPaymentWeekRow_(paymentSheet, trackerSheet, weekStart) {
@@ -1142,11 +1297,31 @@ function setupAddPaymentWeekRow_(paymentSheet, trackerSheet, weekStart) {
 
   const weekKey = Utilities.formatDate(weekStart, timezone, "yyyy-MM-dd");
 
+  const paymentMap = setupBuildHeaderMap_(paymentSheet);
+  const weekStartColumn = paymentMap[setupNormalizeHeader_("Week Start")];
+  const weekEndColumn = paymentMap[setupNormalizeHeader_("Week End")];
+  const eligibleApplicationsColumn =
+    paymentMap[setupNormalizeHeader_("Eligible Applications")];
+  const totalPaymentColumn =
+    paymentMap[setupNormalizeHeader_("Total Payment Due")];
+  const paymentStatusColumn =
+    paymentMap[setupNormalizeHeader_("Payment Status")];
+
+  if (
+    !weekStartColumn ||
+    !weekEndColumn ||
+    !eligibleApplicationsColumn ||
+    !totalPaymentColumn ||
+    !paymentStatusColumn
+  ) {
+    throw new Error("Payment Summary is missing required V2 columns.");
+  }
+
   const lastRow = Math.max(paymentSheet.getLastRow(), 1);
 
   if (lastRow >= 2) {
     const existingDates = paymentSheet
-      .getRange(2, 1, lastRow - 1, 1)
+      .getRange(2, weekStartColumn, lastRow - 1, 1)
       .getValues();
 
     const alreadyExists = existingDates.some(function (row) {
@@ -1170,7 +1345,8 @@ function setupAddPaymentWeekRow_(paymentSheet, trackerSheet, weekStart) {
 
   weekEnd.setDate(weekStart.getDate() + 6);
 
-  paymentSheet.getRange(row, 1, 1, 2).setValues([[weekStart, weekEnd]]);
+  paymentSheet.getRange(row, weekStartColumn).setValue(weekStart);
+  paymentSheet.getRange(row, weekEndColumn).setValue(weekEnd);
 
   const trackerMap = setupBuildHeaderMap_(trackerSheet);
 
@@ -1179,16 +1355,9 @@ function setupAddPaymentWeekRow_(paymentSheet, trackerSheet, weekStart) {
   const eligibilityColumn =
     trackerMap[setupNormalizeHeader_("Payment Eligibility")];
 
-  const decisionColumn = trackerMap[setupNormalizeHeader_("Decision")];
-
   const paymentDueColumn = trackerMap[setupNormalizeHeader_("Payment Due")];
 
-  if (
-    !dateColumn ||
-    !eligibilityColumn ||
-    !decisionColumn ||
-    !paymentDueColumn
-  ) {
+  if (!dateColumn || !eligibilityColumn || !paymentDueColumn) {
     throw new Error(
       "Payment Summary could not find the required tracker columns.",
     );
@@ -1210,13 +1379,6 @@ function setupAddPaymentWeekRow_(paymentSheet, trackerSheet, weekStart) {
     `${setupColumnLetter_(eligibilityColumn)}$` +
     `${JOB_MATCH_CONFIG.formulaEndRow}`;
 
-  const decisionRange =
-    `'${trackerName}'!$` +
-    `${setupColumnLetter_(decisionColumn)}$` +
-    `${JOB_MATCH_CONFIG.dataStartRow}:$` +
-    `${setupColumnLetter_(decisionColumn)}$` +
-    `${JOB_MATCH_CONFIG.formulaEndRow}`;
-
   const paymentDueRange =
     `'${trackerName}'!$` +
     `${setupColumnLetter_(paymentDueColumn)}$` +
@@ -1224,40 +1386,31 @@ function setupAddPaymentWeekRow_(paymentSheet, trackerSheet, weekStart) {
     `${setupColumnLetter_(paymentDueColumn)}$` +
     `${JOB_MATCH_CONFIG.formulaEndRow}`;
 
+  const weekStartCell = `$${setupColumnLetter_(weekStartColumn)}${row}`;
+  const weekEndCell = `$${setupColumnLetter_(weekEndColumn)}${row}`;
+
   paymentSheet
-    .getRange(row, 3, 1, 4)
-    .setFormulas([
-      [
-        `=COUNTIFS(` +
-          `${dateRange},">="&$A${row},` +
-          `${dateRange},"<="&$B${row},` +
-          `${eligibilityRange},"Eligible"` +
-          `)`,
+    .getRange(row, eligibleApplicationsColumn)
+    .setFormula(
+      `=COUNTIFS(` +
+        `${dateRange},">="&${weekStartCell},` +
+        `${dateRange},"<="&${weekEndCell},` +
+        `${eligibilityRange},"Eligible"` +
+        `)`,
+    );
 
-        `=COUNTIFS(` +
-          `${dateRange},">="&$A${row},` +
-          `${dateRange},"<="&$B${row},` +
-          `${eligibilityRange},"Eligible",` +
-          `${decisionRange},"Apply"` +
-          `)`,
+  paymentSheet
+    .getRange(row, totalPaymentColumn)
+    .setFormula(
+      `=SUMIFS(` +
+        `${paymentDueRange},` +
+        `${dateRange},">="&${weekStartCell},` +
+        `${dateRange},"<="&${weekEndCell},` +
+        `${eligibilityRange},"Eligible"` +
+        `)`,
+    );
 
-        `=COUNTIFS(` +
-          `${dateRange},">="&$A${row},` +
-          `${dateRange},"<="&$B${row},` +
-          `${eligibilityRange},"Eligible",` +
-          `${decisionRange},"Tailor first"` +
-          `)`,
-
-        `=SUMIFS(` +
-          `${paymentDueRange},` +
-          `${dateRange},">="&$A${row},` +
-          `${dateRange},"<="&$B${row},` +
-          `${eligibilityRange},"Eligible"` +
-          `)`,
-      ],
-    ]);
-
-  paymentSheet.getRange(row, 7).setValue("Pending");
+  paymentSheet.getRange(row, paymentStatusColumn).setValue("Pending");
 
   return true;
 }
