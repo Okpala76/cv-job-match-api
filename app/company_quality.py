@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 import json
+import logging
 import re
 import time
 from threading import Lock
 from urllib.parse import urlparse
 
-from app.ai_client import generate_structured_response
+from app.ai_client import AIProviderError, generate_structured_response
 from app.company_research import research_company
 from app.schemas import (
     AnalyzeMatchRequest,
@@ -16,6 +17,7 @@ from app.schemas import (
 )
 
 _CACHE_TTL_SECONDS = 24 * 60 * 60
+logger = logging.getLogger(__name__)
 _CACHE: dict[str, tuple[float, CompanyQualityResult]] = {}
 _CACHE_LOCK = Lock()
 _LOW_CREDIBILITY_HOSTS = {
@@ -28,6 +30,14 @@ _LOW_CREDIBILITY_HOSTS = {
     "wordpress.com",
     "x.com",
 }
+
+
+class CompanyResearchUnavailable(RuntimeError):
+    """Raised when an external company research provider fails."""
+
+
+class CompanyQualityInternalError(RuntimeError):
+    """Raised when company quality processing fails internally."""
 
 
 def _normalize_company_name(value: str) -> str:
@@ -202,25 +212,58 @@ def assess_company_quality(job: AnalyzeMatchRequest) -> CompanyQualityResult:
         if cached:
             del _CACHE[cache_key]
 
-    research: CompanyResearchResult | None = None
-
     try:
         research = research_company(job)
+    except (AIProviderError, ConnectionError, TimeoutError) as error:
+        logger.exception(
+            "Company research provider failed for company %r (%s): %s",
+            job.company_name,
+            type(error).__name__,
+            error,  # noqa: TRY401
+        )
+        raise CompanyResearchUnavailable(
+            "Company research provider is temporarily unavailable."
+        ) from error
+    except Exception as error:
+        logger.exception(
+            "Company research failed for company %r (%s): %s",
+            job.company_name,
+            type(error).__name__,
+            error,  # noqa: TRY401
+        )
+        raise CompanyQualityInternalError(
+            "Company research failed due to an internal error."
+        ) from error
 
-        if not research.company_evidence or not research.company_sources:
-            result = _manual_review_result(
-                "Google Search grounding returned no usable cited sources.",
-                research=research,
-            )
-        else:
-            scorecard = score_company_research(research)
-            result = evaluate_company_research(research, scorecard)
-    except Exception as error:  # noqa: BLE001
-        return _manual_review_result(
-            "Company research failed and requires manual review: "
-            f"{type(error).__name__}.",
+    if not research.company_evidence or not research.company_sources:
+        result = _manual_review_result(
+            "Google Search grounding returned no usable cited sources.",
             research=research,
         )
+    else:
+        try:
+            scorecard = score_company_research(research)
+            result = evaluate_company_research(research, scorecard)
+        except AIProviderError as error:
+            logger.exception(
+                "Company quality provider failed for company %r (%s): %s",
+                job.company_name,
+                type(error).__name__,
+                error,  # noqa: TRY401
+            )
+            raise CompanyResearchUnavailable(
+                "Company research provider is temporarily unavailable."
+            ) from error
+        except Exception as error:
+            logger.exception(
+                "Company quality scoring failed for company %r (%s): %s",
+                job.company_name,
+                type(error).__name__,
+                error,  # noqa: TRY401
+            )
+            raise CompanyQualityInternalError(
+                "Company quality scoring failed due to an internal error."
+            ) from error
 
     with _CACHE_LOCK:
         _CACHE[cache_key] = (now, result.model_copy(deep=True))

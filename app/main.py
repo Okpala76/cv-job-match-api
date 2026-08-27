@@ -1,16 +1,22 @@
+import logging
 import os
 from typing import Annotated
 
 from fastapi import FastAPI, Header, HTTPException
 
 from app.ai_client import analyze_cv_match
-from app.company_quality import assess_company_quality
+from app.company_quality import (
+    CompanyQualityInternalError,
+    CompanyResearchUnavailable,
+    assess_company_quality,
+)
 from app.geography import evaluate_geography
 from app.role_ceiling import evaluate_role_ceiling
 from app.rules import calculate_match_result
 from app.schemas import AnalyzeMatchRequest, AnalyzeMatchResponse
 
 app = FastAPI(title="CV Job Match API")
+logger = logging.getLogger(__name__)
 
 APP_API_KEY = os.getenv("APP_API_KEY")
 
@@ -147,10 +153,26 @@ def analyze_match(
             decision=decision,
         )
 
+    except CompanyResearchUnavailable as error:
+        raise HTTPException(
+            status_code=503,
+            detail="Company research is temporarily unavailable. Please retry.",
+        ) from error
+    except CompanyQualityInternalError as error:
+        raise HTTPException(
+            status_code=500,
+            detail="Company quality analysis failed. Please retry.",
+        ) from error
     except HTTPException:
         raise
     except Exception as error:
+        logger.exception(
+            "Analysis failed for company %r (%s): %s",
+            request.company_name,
+            type(error).__name__,
+            error,  # noqa: TRY401
+        )
         raise HTTPException(
             status_code=500,
-            detail=f"Analysis failed: {error}",
+            detail="Analysis failed due to an internal error. Please retry.",
         ) from error

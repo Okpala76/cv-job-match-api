@@ -36,6 +36,10 @@ MODEL_CANDIDATES = [
 SchemaType = TypeVar("SchemaType", bound=BaseModel)
 
 
+class AIProviderError(RuntimeError):
+    """Raised when Gemini cannot provide a valid structured response."""
+
+
 def generate_structured_response(
     prompt: str,
     schema_class: type[SchemaType],
@@ -91,7 +95,9 @@ def generate_structured_response(
                 flush=True,
             )
 
-    raise RuntimeError(f"All Gemini models failed. Last error: {last_error}")
+    raise AIProviderError(
+        f"All Gemini models failed. Last error: {last_error}"
+    ) from last_error
 
 
 def analyze_cv_match(job_description: str) -> AIAnalysisResult:

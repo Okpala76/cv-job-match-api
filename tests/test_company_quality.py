@@ -212,7 +212,7 @@ def test_score_70_with_scale_20_and_two_sources_is_accepted() -> None:
     assert result.company_quality_decision == "Accepted"
 
 
-def test_research_failure_returns_uncached_manual_review(monkeypatch) -> None:
+def test_provider_failure_is_uncached_and_propagated(monkeypatch) -> None:
     calls = 0
 
     def fail_research(job: AnalyzeMatchRequest) -> CompanyResearchResult:
@@ -222,16 +222,16 @@ def test_research_failure_returns_uncached_manual_review(monkeypatch) -> None:
 
     monkeypatch.setattr(company_quality, "research_company", fail_research)
 
-    first = company_quality.assess_company_quality(make_job())
-    second = company_quality.assess_company_quality(make_job())
+    with pytest.raises(company_quality.CompanyResearchUnavailable):
+        company_quality.assess_company_quality(make_job())
 
-    assert first.company_quality_decision == "Manual review"
-    assert first.company_confidence == "Low"
-    assert second.company_quality_decision == "Manual review"
+    with pytest.raises(company_quality.CompanyResearchUnavailable):
+        company_quality.assess_company_quality(make_job())
+
     assert calls == 2
 
 
-def test_scoring_failure_preserves_grounded_research(monkeypatch) -> None:
+def test_internal_scoring_failure_is_propagated(monkeypatch) -> None:
     research = make_research()
     monkeypatch.setattr(company_quality, "research_company", lambda job: research)
 
@@ -240,12 +240,8 @@ def test_scoring_failure_preserves_grounded_research(monkeypatch) -> None:
 
     monkeypatch.setattr(company_quality, "score_company_research", fail_scoring)
 
-    result = company_quality.assess_company_quality(make_job())
-
-    assert result.company_quality_decision == "Manual review"
-    assert result.company_confidence == "Low"
-    assert result.company_evidence == research.company_evidence
-    assert result.company_sources == research.company_sources
+    with pytest.raises(company_quality.CompanyQualityInternalError):
+        company_quality.assess_company_quality(make_job())
 
 
 def test_no_grounding_citations_skips_scoring(monkeypatch) -> None:
