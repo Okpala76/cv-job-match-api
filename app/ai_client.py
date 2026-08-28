@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import TypeVar
 
@@ -10,6 +11,7 @@ from app.cv_text import CV_TEXT
 from app.schemas import AIAnalysisResult
 
 load_dotenv()
+logger = logging.getLogger(__name__)
 
 api_key = os.getenv("GEMINI_API_KEY")
 
@@ -26,12 +28,7 @@ client = genai.Client(
     ),
 )
 
-MODEL_CANDIDATES = [
-    "gemini-3.1-flash-lite",
-    # "gemini-2.5-flash-lite",
-    # "gemini-2.5-flash",
-    # "gemini-3.5-flash",
-]
+MODEL_CANDIDATES = [os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")]
 
 SchemaType = TypeVar("SchemaType", bound=BaseModel)
 
@@ -52,10 +49,7 @@ def generate_structured_response(
     last_error: Exception | None = None
 
     for model in MODEL_CANDIDATES:
-        print(
-            f"[Gemini] Trying model: {model}",
-            flush=True,
-        )
+        logger.info("Trying Gemini model=%s", model)
 
         try:
             interaction = client.interactions.create(
@@ -75,24 +69,18 @@ def generate_structured_response(
 
             result = schema_class.model_validate_json(output_text)
 
-            print(
-                f"[Gemini] Model succeeded: {model}",
-                flush=True,
-            )
+            logger.info("Gemini model succeeded model=%s", model)
 
             return result
 
-        except Exception as error:  # noqa: BLE001
+        except Exception as error:
             last_error = error
 
-            print(
-                f"[Gemini] Model failed: {model}",
-                flush=True,
-            )
-
-            print(
-                f"[Gemini] Error: " f"{type(error).__name__}: {error}",
-                flush=True,
+            logger.exception(
+                "Gemini model failed model=%s (%s): %s",
+                model,
+                type(error).__name__,
+                error,  # noqa: TRY401
             )
 
     raise AIProviderError(

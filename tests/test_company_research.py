@@ -1,9 +1,13 @@
 import pytest
 from google.genai import types
 
-from app import company_research
 from app.ai_client import AIProviderError
-from app.schemas import AnalyzeMatchRequest, CompanyResearchDraft
+from app.research_providers import gemini
+from app.schemas import (
+    AnalyzeMatchRequest,
+    CompanyQualityScorecard,
+    CompanyResearchDraft,
+)
 
 
 def make_job() -> AnalyzeMatchRequest:
@@ -13,6 +17,17 @@ def make_job() -> AnalyzeMatchRequest:
         country_location="Nairobi, Kenya",
         job_link="https://example.com/job",
         job_description="Build payment systems.",
+    )
+
+
+def make_scorecard() -> CompanyQualityScorecard:
+    return CompanyQualityScorecard(
+        company_scale_score=27,
+        company_market_position_score=22,
+        company_geographic_reach_score=12,
+        company_engineering_maturity_score=15,
+        company_reputation_score=8,
+        company_quality_reasons=["Strong evidence."],
     )
 
 
@@ -70,12 +85,17 @@ def test_grounded_research_extracts_google_search_citations(monkeypatch) -> None
         return response
 
     monkeypatch.setattr(
-        company_research.client.models,
+        gemini.client.models,
         "generate_content",
         fake_generate_content,
     )
+    monkeypatch.setattr(
+        gemini,
+        "generate_structured_response",
+        lambda **kwargs: make_scorecard(),
+    )
 
-    result = company_research.research_company(make_job())
+    result = gemini.research_with_gemini(make_job()).research
 
     assert captured_config.tools[0].google_search is not None
     assert result.company_sources == [
@@ -92,7 +112,7 @@ def test_search_runtime_error_is_wrapped_as_provider_failure(monkeypatch) -> Non
         raise RuntimeError("Google Search grounding rejected the request")
 
     monkeypatch.setattr(
-        company_research.client.models,
+        gemini.client.models,
         "generate_content",
         fail_generate_content,
     )
@@ -104,4 +124,4 @@ def test_search_runtime_error_is_wrapped_as_provider_failure(monkeypatch) -> Non
             "Google Search grounding rejected the request"
         ),
     ):
-        company_research.research_company(make_job())
+        gemini.research_with_gemini(make_job())

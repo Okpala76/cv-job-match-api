@@ -1,6 +1,7 @@
 import pytest
 
 from app import company_quality
+from app.research_providers.base import CompanyResearchAssessment
 from app.schemas import (
     AnalyzeMatchRequest,
     CompanyEvidence,
@@ -70,6 +71,17 @@ def make_scorecard(**overrides: int) -> CompanyQualityScorecard:
     }
     values.update(overrides)
     return CompanyQualityScorecard(**values)
+
+
+def make_assessment(
+    research: CompanyResearchResult | None = None,
+    scorecard: CompanyQualityScorecard | None = None,
+) -> CompanyResearchAssessment:
+    return CompanyResearchAssessment(
+        research=research or make_research(),
+        scorecard=scorecard or make_scorecard(),
+        provider="serper_groq",
+    )
 
 
 @pytest.fixture(autouse=True)
@@ -215,7 +227,7 @@ def test_score_70_with_scale_20_and_two_sources_is_accepted() -> None:
 def test_provider_failure_is_uncached_and_propagated(monkeypatch) -> None:
     calls = 0
 
-    def fail_research(job: AnalyzeMatchRequest) -> CompanyResearchResult:
+    def fail_research(job: AnalyzeMatchRequest) -> CompanyResearchAssessment:
         nonlocal calls
         calls += 1
         raise ConnectionError("Search unavailable")
@@ -232,13 +244,16 @@ def test_provider_failure_is_uncached_and_propagated(monkeypatch) -> None:
 
 
 def test_internal_scoring_failure_is_propagated(monkeypatch) -> None:
-    research = make_research()
-    monkeypatch.setattr(company_quality, "research_company", lambda job: research)
+    monkeypatch.setattr(
+        company_quality,
+        "research_company",
+        lambda job: make_assessment(),
+    )
 
-    def fail_scoring(research: CompanyResearchResult) -> CompanyQualityScorecard:
+    def fail_scoring(research, scorecard):
         raise RuntimeError("Scoring unavailable")
 
-    monkeypatch.setattr(company_quality, "score_company_research", fail_scoring)
+    monkeypatch.setattr(company_quality, "evaluate_company_research", fail_scoring)
 
     with pytest.raises(company_quality.CompanyQualityInternalError):
         company_quality.assess_company_quality(make_job())
@@ -246,12 +261,11 @@ def test_internal_scoring_failure_is_propagated(monkeypatch) -> None:
 
 def test_no_grounding_citations_skips_scoring(monkeypatch) -> None:
     research = make_research(company_evidence=[], company_sources=[])
-    monkeypatch.setattr(company_quality, "research_company", lambda job: research)
-
-    def fail_if_called(research: CompanyResearchResult) -> CompanyQualityScorecard:
-        raise AssertionError("Ungrounded research must not be scored")
-
-    monkeypatch.setattr(company_quality, "score_company_research", fail_if_called)
+    monkeypatch.setattr(
+        company_quality,
+        "research_company",
+        lambda job: make_assessment(research=research),
+    )
 
     result = company_quality.assess_company_quality(make_job())
 
@@ -263,17 +277,12 @@ def test_no_grounding_citations_skips_scoring(monkeypatch) -> None:
 def test_normalized_company_name_uses_process_cache(monkeypatch) -> None:
     research_calls = 0
 
-    def fake_research(job: AnalyzeMatchRequest) -> CompanyResearchResult:
+    def fake_research(job: AnalyzeMatchRequest) -> CompanyResearchAssessment:
         nonlocal research_calls
         research_calls += 1
-        return make_research()
+        return make_assessment()
 
     monkeypatch.setattr(company_quality, "research_company", fake_research)
-    monkeypatch.setattr(
-        company_quality,
-        "score_company_research",
-        lambda research: make_scorecard(),
-    )
 
     first = company_quality.assess_company_quality(
         make_job(company_name="Example Company")
@@ -285,3 +294,24 @@ def test_normalized_company_name_uses_process_cache(monkeypatch) -> None:
     assert first.company_quality_decision == "Accepted"
     assert second.company_quality_decision == "Accepted"
     assert research_calls == 1
+
+
+def test_assessment_after_fallback_failure_is_not_cached(monkeypatch) -> None:
+    research_calls = 0
+
+    def fake_research(job: AnalyzeMatchRequest) -> CompanyResearchAssessment:
+        nonlocal research_calls
+        research_calls += 1
+        return CompanyResearchAssessment(
+            research=make_research(company_sources=["https://company.example/about"]),
+            scorecard=make_scorecard(),
+            provider="serper_groq",
+            cacheable=False,
+        )
+
+    monkeypatch.setattr(company_quality, "research_company", fake_research)
+
+    company_quality.assess_company_quality(make_job())
+    company_quality.assess_company_quality(make_job())
+
+    assert research_calls == 2
