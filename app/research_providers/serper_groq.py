@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-import json
 import os
 import time
-from dataclasses import dataclass
-from typing import Literal
+from dataclasses import dataclass, replace
+from typing import Annotated, Literal
 from urllib.parse import urlparse
 
 import requests
 from groq import Groq
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from app.ai_client import AIProviderError
 from app.company_rubric import COMPANY_SCORE_RUBRIC
@@ -26,7 +25,10 @@ SERPER_URL = "https://google.serper.dev/search"
 GROQ_MODEL = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b")
 _REQUEST_TIMEOUT_SECONDS = 6
 _MAX_ATTEMPTS = 2
-_MAX_EVIDENCE_RESULTS = 10
+_MAX_EVIDENCE_RESULTS = 8
+_MAX_SNIPPET_LENGTH = 280
+_MAX_TITLE_LENGTH = 160
+_MAX_COMPLETION_TOKENS = 1800
 _STRICT_GROQ_MODELS = {
     "openai/gpt-oss-20b",
     "openai/gpt-oss-120b",
@@ -47,14 +49,7 @@ class SearchEvidence:
     snippet: str
     source: str
     query: str
-
-
-class GroqEvidence(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    claim: str = Field(min_length=1)
-    source_url: str = Field(min_length=1)
-    source_title: str
+    source_id: str = ""
 
 
 class GroqCompanyEvaluation(BaseModel):
@@ -69,8 +64,12 @@ class GroqCompanyEvaluation(BaseModel):
     company_engineering_maturity_score: int = Field(ge=0, le=20)
     company_reputation_score: int = Field(ge=0, le=10)
     confidence: Literal["High", "Medium", "Low"]
-    reasons: list[str] = Field(min_length=1)
-    evidence: list[GroqEvidence]
+    reasons: list[
+        Annotated[str, Field(min_length=1, max_length=180)]
+    ] = Field(min_length=1, max_length=5)
+    source_ids: list[
+        Annotated[str, Field(pattern=r"^S[1-8]$")]
+    ] = Field(max_length=6)
 
 
 def build_search_queries(job: AnalyzeMatchRequest) -> list[str]:
@@ -186,11 +185,22 @@ def normalize_search_results(
     credible = [item for item in ranked if is_credible_source(item.url)]
     strong = [item for item in credible if not _obvious_low_quality_result(item)]
     selected = strong or credible or ranked
-    return selected[:_MAX_EVIDENCE_RESULTS]
+    return [
+        replace(item, source_id=f"S{index}")
+        for index, item in enumerate(selected[:_MAX_EVIDENCE_RESULTS], start=1)
+    ]
+
+
+def _compact_field(value: str, max_length: int) -> str:
+    return " ".join(value.replace("|", " ").split())[:max_length]
 
 
 def _evaluation_prompt(job: AnalyzeMatchRequest, evidence: list[SearchEvidence]) -> str:
-    payload = [item.__dict__ for item in evidence]
+    evidence_lines = "\n".join(
+        f"{item.source_id} | {_compact_field(item.title, _MAX_TITLE_LENGTH)} | "
+        f"{item.source} | {_compact_field(item.snippet, _MAX_SNIPPET_LENGTH)}"
+        for item in evidence
+    )
     return f"""
 Evaluate the company using ONLY the supplied Serper search evidence. Extract
 facts and score the five rubric components, but do not make the final
@@ -198,25 +208,54 @@ Accepted/Rejected decision.
 
 Rules:
 - Never use unstated internal knowledge.
-- Never invent financial figures, employee counts, claims, or URLs.
-- Every evidence source_url must exactly match a supplied URL.
+- Never invent financial figures, employee counts, claims, or source IDs.
+- Return only source IDs supplied below. Do not return or generate URLs.
 - Treat missing evidence as missing and score conservatively.
 - Distinguish similarly named companies.
 - Job context is only for company identity disambiguation.
 - Do not judge the candidate.
 - Report identity ambiguity, material source conflict, and confidence.
+- Return at most 5 short reasons and at most 6 source IDs.
+
+Return only one JSON object with exactly these fields and no additional fields:
+- resolved_company_name: string
+- identity_ambiguous: boolean
+- source_conflict: boolean
+- company_scale_score: integer 0-30
+- company_market_position_score: integer 0-25
+- company_geographic_reach_score: integer 0-15
+- company_engineering_maturity_score: integer 0-20
+- company_reputation_score: integer 0-10
+- confidence: "High", "Medium", or "Low"
+- reasons: array of 1-5 concise strings
+- source_ids: array of at most 6 supplied IDs
 
 Company: {job.company_name}
 Job title: {job.job_title}
 Location: {job.country_location}
-Job URL: {job.job_link}
 
 Rubric:
 {COMPANY_SCORE_RUBRIC}
 
 Supplied evidence:
-{json.dumps(payload, indent=2)}
+{evidence_lines}
 """
+
+
+def _json_format_failure(error: Exception) -> bool:
+    if isinstance(error, (ValueError, ValidationError)):
+        return True
+
+    details = f"{error} {getattr(error, 'body', '')}".lower()
+    return any(
+        marker in details
+        for marker in (
+            "json_validate_failed",
+            "failed_generation",
+            "max completion tokens",
+            "valid json",
+        )
+    )
 
 
 def _evaluate_with_groq(
@@ -237,27 +276,37 @@ def _evaluate_with_groq(
     except Exception as error:
         raise AIProviderError(f"Groq client setup failed: {error}") from error
     last_error: Exception | None = None
+    use_json_object = False
 
     for attempt in range(_MAX_ATTEMPTS):
         try:
-            response = client.chat.completions.create(
-                model=GROQ_MODEL,
-                messages=[
-                    {
-                        "role": "system",
-                        "content": "Return a strict evidence-based company evaluation.",
-                    },
-                    {"role": "user", "content": _evaluation_prompt(job, evidence)},
-                ],
-                response_format={
+            response_format = (
+                {"type": "json_object"}
+                if use_json_object
+                else {
                     "type": "json_schema",
                     "json_schema": {
                         "name": "company_research_evaluation",
                         "strict": GROQ_MODEL in _STRICT_GROQ_MODELS,
                         "schema": GroqCompanyEvaluation.model_json_schema(),
                     },
-                },
+                }
+            )
+            response = client.chat.completions.create(
+                model=GROQ_MODEL,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "Return only JSON matching the compact company "
+                            "evaluation contract in the user prompt."
+                        ),
+                    },
+                    {"role": "user", "content": _evaluation_prompt(job, evidence)},
+                ],
+                response_format=response_format,
                 temperature=0,
+                max_completion_tokens=_MAX_COMPLETION_TOKENS,
             )
             content = response.choices[0].message.content
 
@@ -268,6 +317,11 @@ def _evaluate_with_groq(
         except Exception as error:  # noqa: BLE001
             last_error = error
             status_code = getattr(error, "status_code", None)
+            format_failure = _json_format_failure(error)
+
+            if attempt == 0 and format_failure:
+                use_json_object = True
+                continue
 
             if status_code is not None and not _transient_status(status_code):
                 break
@@ -282,34 +336,28 @@ def _normalize_evaluation(
     evaluation: GroqCompanyEvaluation,
     supplied_evidence: list[SearchEvidence],
 ) -> CompanyResearchAssessment:
-    supplied_urls = {item.url: item for item in supplied_evidence}
+    supplied_sources = {
+        item.source_id or f"S{index}": item
+        for index, item in enumerate(supplied_evidence, start=1)
+    }
     evidence: list[CompanyEvidence] = []
     sources: list[str] = []
-    seen: set[tuple[str, str]] = set()
+    seen_source_ids: set[str] = set()
 
-    for item in evaluation.evidence:
-        normalized_url = normalize_public_url(item.source_url)
-
-        if not normalized_url or normalized_url not in supplied_urls:
+    for source_id in evaluation.source_ids:
+        if source_id in seen_source_ids or source_id not in supplied_sources:
             continue
 
-        key = (item.claim, normalized_url)
-
-        if key in seen:
-            continue
-
-        seen.add(key)
-        source = supplied_urls[normalized_url]
+        seen_source_ids.add(source_id)
+        source = supplied_sources[source_id]
         evidence.append(
             CompanyEvidence(
-                claim=item.claim,
-                source_url=normalized_url,
-                source_title=item.source_title or source.title,
+                claim=f"Source used in company evaluation: {source.title}",
+                source_url=source.url,
+                source_title=source.title,
             )
         )
-
-        if normalized_url not in sources:
-            sources.append(normalized_url)
+        sources.append(source.url)
 
     research = CompanyResearchResult(
         researched_company_name=evaluation.resolved_company_name,

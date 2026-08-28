@@ -1,7 +1,10 @@
+from types import SimpleNamespace
+
 import pytest
 
 from app import company_research
 from app.ai_client import AIProviderError
+from app.research_providers import serper_groq
 from app.research_providers.base import CompanyResearchAssessment
 from app.schemas import (
     AnalyzeMatchRequest,
@@ -158,3 +161,111 @@ def test_unexpected_primary_error_is_not_misclassified_as_provider_failure(
 
     with pytest.raises(RuntimeError, match="internal normalization bug"):
         company_research.research_company(make_job())
+
+
+def compact_groq_json() -> str:
+    return serper_groq.GroqCompanyEvaluation(
+        resolved_company_name="Example Company",
+        identity_ambiguous=False,
+        source_conflict=False,
+        company_scale_score=27,
+        company_market_position_score=22,
+        company_geographic_reach_score=12,
+        company_engineering_maturity_score=15,
+        company_reputation_score=8,
+        confidence="High",
+        reasons=["Strong grounded evidence."],
+        source_ids=["S1", "S2"],
+    ).model_dump_json()
+
+
+def configure_primary_search(monkeypatch) -> None:
+    monkeypatch.setattr(
+        serper_groq,
+        "_search_serper",
+        lambda query: [
+            {
+                "title": "Annual report",
+                "link": "https://company.example/report",
+                "snippet": "Large established company.",
+            },
+            {
+                "title": "Regulatory record",
+                "link": "https://regulator.example/record",
+                "snippet": "Regulated company.",
+            },
+        ],
+    )
+
+
+def test_compact_retry_success_does_not_call_gemini(monkeypatch) -> None:
+    configure_primary_search(monkeypatch)
+    calls = 0
+
+    class JsonValidationError(Exception):
+        status_code = 400
+
+    class FakeCompletions:
+        def create(self, **kwargs):
+            nonlocal calls
+            calls += 1
+
+            if calls == 1:
+                raise JsonValidationError("json_validate_failed")
+
+            return SimpleNamespace(
+                choices=[
+                    SimpleNamespace(
+                        message=SimpleNamespace(content=compact_groq_json())
+                    )
+                ]
+            )
+
+    class FakeGroq:
+        def __init__(self, **kwargs):
+            self.chat = SimpleNamespace(completions=FakeCompletions())
+
+    def fail_fallback(job):
+        raise AssertionError("Gemini must not run after compact Groq retry succeeds")
+
+    monkeypatch.setattr(serper_groq, "Groq", FakeGroq)
+    monkeypatch.setattr(company_research, "research_with_gemini", fail_fallback)
+
+    result = company_research.research_company(make_job())
+
+    assert result.provider == "serper_groq"
+    assert calls == 2
+
+
+def test_both_groq_format_attempts_fail_then_gemini_runs(monkeypatch) -> None:
+    configure_primary_search(monkeypatch)
+    calls = 0
+    fallback_calls = 0
+    fallback = make_assessment(provider="gemini")
+
+    class JsonValidationError(Exception):
+        status_code = 400
+
+    class FakeCompletions:
+        def create(self, **kwargs):
+            nonlocal calls
+            calls += 1
+            raise JsonValidationError("json_validate_failed")
+
+    class FakeGroq:
+        def __init__(self, **kwargs):
+            self.chat = SimpleNamespace(completions=FakeCompletions())
+
+    def run_fallback(job):
+        nonlocal fallback_calls
+        fallback_calls += 1
+        return fallback
+
+    monkeypatch.setattr(serper_groq, "Groq", FakeGroq)
+    monkeypatch.setattr(company_research, "research_with_gemini", run_fallback)
+
+    result = company_research.research_company(make_job())
+
+    assert result is fallback
+    assert calls == 2
+    assert fallback_calls == 1
